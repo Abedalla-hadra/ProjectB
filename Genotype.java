@@ -273,6 +273,8 @@ public class Genotype {
 				}else {
 					tDirection = Direction.UP;
 				}
+			}else if(iterNum%2 == 0) {
+				
 			}
 			iterNum++;
 		}
