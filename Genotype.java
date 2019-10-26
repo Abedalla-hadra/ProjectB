@@ -217,8 +217,8 @@ public class Genotype {
 				System.out.println("s layer: "+sLayer);
 				System.out.println("t layer: "+tLayer);
 				*/
-				int newYindexForS = randomNumInRange(yIndexOfS, sObstacleIndex);
-				int newYindexForT = randomNumInRange(yIndexOfT, tObstacleIndex);
+				int newYindexForS = randomNumInRange(yIndexOfS, sObstacleIndex+1);
+				int newYindexForT = randomNumInRange(yIndexOfT, tObstacleIndex+1);
 				/*
 				System.out.println("new y for s : "+newYindexForS);
 				System.out.println("new y for t : "+newYindexForT);
@@ -274,7 +274,14 @@ public class Genotype {
 					tDirection = Direction.UP;
 				}
 			}else if(iterNum%2 == 0) {
-				
+				tempChannel[yIndexOfS][xIndexOfS][sLayer] = s.getPinNum();
+				tempChannel[yIndexOfT][xIndexOfT][tLayer] = t.getPinNum();
+				sLayer = layerOfExtention(sDirection);
+				tLayer = layerOfExtention(tDirection);
+				int minYForS = indexOfObstacle(tempChannel, Direction.UP, yIndexOfS, xIndexOfS, sLayer);
+				int maxYForS = indexOfObstacle(tempChannel, Direction.DOWN, yIndexOfS, xIndexOfS, sLayer);
+				int minYForT = indexOfObstacle(tempChannel, Direction.UP, yIndexOfT, xIndexOfT, tLayer);
+				int maxYForT = indexOfObstacle(tempChannel, Direction.DOWN, yIndexOfT, xIndexOfT, tLayer); 
 			}
 			iterNum++;
 		}
