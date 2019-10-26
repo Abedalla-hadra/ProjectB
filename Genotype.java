@@ -169,6 +169,12 @@ public class Genotype {
 		}
 		return randomNum;
 	}
+	private int getYindexOfPin(Pin pin) {
+		if(pin.isOnUpper()) {
+			return 0;
+		}
+		return numOfRows-1;
+	}
 	public int connectPins(Pin s,Pin t) {
 		Integer[][][] tempChannel = new Integer[this.numOfRows][this.num_of_pins][layers];
 		copyChannel(tempChannel);
@@ -205,7 +211,7 @@ public class Genotype {
 
 		}
 		boolean solutionFound = false;
-		while(!solutionFound && iterNum < 2/*maxNumOfIterations*/ && !noValidSolution) {
+		while(!solutionFound && iterNum < 3/*maxNumOfIterations*/ && !noValidSolution) {
 			if (iterNum == 0) {
 				tempChannel[yIndexOfS][xIndexOfS][sLayer] = s.getPinNum();
 				tempChannel[yIndexOfT][xIndexOfT][tLayer] = t.getPinNum();
@@ -236,20 +242,24 @@ public class Genotype {
 				tLayer = layerOfExtention(tDirection);
 				tempChannel[yIndexOfS][xIndexOfS][sLayer] = s.getPinNum();
 				tempChannel[yIndexOfT][xIndexOfT][tLayer] = t.getPinNum();
-				System.out.println("s layer: "+sLayer);
-				System.out.println("t layer: "+tLayer);
+				//System.out.println("s layer: "+sLayer);
+				//System.out.println("t layer: "+tLayer);
 				int minXForS = indexOfObstacle(tempChannel, Direction.LEFT, yIndexOfS, xIndexOfS, sLayer);
 				int maxXForS = indexOfObstacle(tempChannel, Direction.RIGHT, yIndexOfS, xIndexOfS, sLayer);
 				int minXForT = indexOfObstacle(tempChannel, Direction.LEFT, yIndexOfT, xIndexOfT, tLayer);
 				int maxXForT = indexOfObstacle(tempChannel, Direction.RIGHT, yIndexOfT, xIndexOfT, tLayer);
+				/*
 				System.out.println("min xS "+minXForS);
 				System.out.println("max xS "+maxXForS);
 				System.out.println("min xT "+minXForT);
 				System.out.println("max xT "+maxXForT);
+				*/
 				int newXindexForS = randomNumInRange(minXForS,maxXForS+1);
 				int newXindexForT = randomNumInRange(minXForT,maxXForT+1);
+				/*
 				System.out.println("new xS "+newXindexForS);
 				System.out.println("new xT "+newXindexForT);
+				*/
 				if(newXindexForS <= xIndexOfS) {
 					updateTempChannel(tempChannel, Direction.LEFT, yIndexOfS, xIndexOfS, sLayer, newXindexForS, s.getPinNum());
 				}else {
@@ -281,8 +291,27 @@ public class Genotype {
 				int minYForS = indexOfObstacle(tempChannel, Direction.UP, yIndexOfS, xIndexOfS, sLayer);
 				int maxYForS = indexOfObstacle(tempChannel, Direction.DOWN, yIndexOfS, xIndexOfS, sLayer);
 				int minYForT = indexOfObstacle(tempChannel, Direction.UP, yIndexOfT, xIndexOfT, tLayer);
-				int maxYForT = indexOfObstacle(tempChannel, Direction.DOWN, yIndexOfT, xIndexOfT, tLayer); 
+				int maxYForT = indexOfObstacle(tempChannel, Direction.DOWN, yIndexOfT, xIndexOfT, tLayer);
+				int newYindexForS = randomNumInRange(minYForS, maxYForS+1);
+				int newYindexForT = randomNumInRange(minYForT, maxYForT+1);
+				if(newYindexForS <= yIndexOfS) {
+					updateTempChannel(tempChannel, Direction.UP, yIndexOfS, xIndexOfS, sLayer, newYindexForS, s.getPinNum());
+				}else {
+					updateTempChannel(tempChannel, Direction.DOWN, yIndexOfS, xIndexOfS, sLayer, newYindexForS, s.getPinNum());
+				}
+				if(newYindexForT <= yIndexOfT) {
+					updateTempChannel(tempChannel, Direction.UP, yIndexOfT, xIndexOfT, tLayer, newYindexForT, t.getPinNum());
+				}else {
+					updateTempChannel(tempChannel, Direction.DOWN, yIndexOfT, xIndexOfT, tLayer, newYindexForT, t.getPinNum());
+				}
+				yIndexOfS = newYindexForS;
+				yIndexOfT = newYindexForT;
+				if(s.getIndex()>t.getIndex()) {
+					sDirection = Direction.LEFT;
+					tDirection = Direction.RIGHT;
+				}
 			}
+
 			iterNum++;
 		}
 		printTempChannel(tempChannel);
@@ -370,10 +399,11 @@ public class Genotype {
 		}
 	}
 	public static void main(String[] args) {
-		ArrayList<Integer> out = new ArrayList<Integer>(Arrays.asList(2, 3, 1));
-		ArrayList<Integer> in = new ArrayList<Integer>(Arrays.asList(1, 2, 3));
+		ArrayList<Integer> out = new ArrayList<Integer>(Arrays.asList(2, 3,1));
+		ArrayList<Integer> in = new ArrayList<Integer>(Arrays.asList(1,2,3));
 		Genotype s = new Genotype(in, out, 2);
-		
+		//int y = s.getYindexOfPin(new Pin(1,0,false));
+		//System.out.print(y);
 		//s.printBoard();
 		/*
 		s.printUnconnectedPins();
