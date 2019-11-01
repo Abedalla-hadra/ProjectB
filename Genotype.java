@@ -311,12 +311,71 @@ public class Genotype {
 					tDirection = Direction.RIGHT;
 				}
 			}
-
+			if(checkIfTwoPinsConnected(tempChannel,s,t) == true) {
+				System.out.println("found solution");
+				printTempChannel(tempChannel);
+				return 1;
+			}
 			iterNum++;
 		}
 		printTempChannel(tempChannel);
 
 		return 1;
+	}
+	private boolean recIsTherePath(Integer[][][] tempChannel,int pin_num,int startX,int startY,int endX,int endY,int z) {
+		if(startX == endX && startY == endY) {
+			return true;
+		}
+		if(startX >= num_of_pins || startX < 0 || startY < 0 || startY >= numOfRows) {
+			return false;
+		}
+		if(tempChannel[startY][startX][z] != pin_num) {
+			return false;
+		}
+		tempChannel[startY][startX][z]= -pin_num;
+		int z2 = (z == 1)? 0 : 1;
+		if(recIsTherePath(tempChannel,pin_num,startX+1,startY,endX,endY,z) || 
+		   recIsTherePath(tempChannel,pin_num,startX-1,startY,endX,endY,z) ||
+		   recIsTherePath(tempChannel,pin_num,startX,startY+1,endX,endY,z) ||
+		   recIsTherePath(tempChannel,pin_num,startX,startY-1,endX,endY,z) ||
+		   recIsTherePath(tempChannel,pin_num,startX+1,startY,endX,endY,z2) || 
+		   recIsTherePath(tempChannel,pin_num,startX-1,startY,endX,endY,z2) ||
+		   recIsTherePath(tempChannel,pin_num,startX,startY+1,endX,endY,z2) ||
+		   recIsTherePath(tempChannel,pin_num,startX,startY-1,endX,endY,z2)) {
+			return true;
+		}
+		tempChannel[startY][startX][z]= pin_num;
+		return false;
+	}
+	private boolean checkIfTwoPinsConnected(Integer[][][] tempChannel,Pin s,Pin e) {
+		int startX = s.getIndex();
+		int startY = getYindexOfPin(s);
+		if(startY == 0) {
+			startY=1;
+		}else {
+			startY--;
+		}
+		int endX = e.getIndex();
+		int endY = getYindexOfPin(e);
+		if(endY ==0) {
+			endY = 1;
+		}else {
+			endY--;
+		}
+		int pin_num = s.getPinNum();
+		Integer[][][] channelForChecking = new Integer[this.numOfRows][this.num_of_pins][layers];
+		for (int z = 0; z < 2; z++) {
+			for (int y = 0; y < this.numOfRows; y++) {
+				for (int x = 0; x < this.num_of_pins; x++) {
+					if(channel[y][x][z] == pin_num || tempChannel[y][x][z] == pin_num) {
+						channelForChecking[y][x][z] = pin_num;
+					}else {
+						channelForChecking[y][x][z] = channel[y][x][z];
+					}
+				}
+			}
+		}
+		return recIsTherePath(channelForChecking, pin_num, startX, startY, endX, endY, 0);
 	}
 	public int randomSolution() {
 		Random randomGenerator = new Random();
