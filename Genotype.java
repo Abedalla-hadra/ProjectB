@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.Random;
-
+import java.util.LinkedList; 
+import java.util.Queue;
 enum Direction {
 	UP, DOWN, LEFT, RIGHT
 }
@@ -376,6 +377,37 @@ public class Genotype {
 			}
 		}
 		return recIsTherePath(channelForChecking, pin_num, startX, startY, endX, endY, 0);
+	}
+	private void findShortestPathAndConnect(Integer[][][] tempChannel,Pin s,Pin e) {
+		int startX = s.getIndex();
+		int startY = getYindexOfPin(s);
+		if(startY == 0) {
+			startY=1;
+		}else {
+			startY--;
+		}
+		int endX = e.getIndex();
+		int endY = getYindexOfPin(e);
+		if(endY ==0) {
+			endY = 1;
+		}else {
+			endY--;
+		}
+		int pin_num = s.getPinNum();
+		Point[][][] graph = new Point[this.numOfRows][this.num_of_pins][layers];
+		for (int z = 0; z < 2; z++) {
+			for (int y = 0; y < this.numOfRows; y++) {
+				for (int x = 0; x < this.num_of_pins; x++) {
+					if(channel[y][x][z] == pin_num || tempChannel[y][x][z] == pin_num) {
+						graph[y][x][z] = new Point(y,x,z);
+					}else {
+						graph[y][x][z] = null;
+					}
+				}
+			}
+		}
+		Queue<Point> queue = new LinkedList<>();
+		
 	}
 	public int randomSolution() {
 		Random randomGenerator = new Random();
