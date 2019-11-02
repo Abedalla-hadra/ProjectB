@@ -11,7 +11,7 @@ enum Direction {
 }
 public class Genotype {
 	static int layers = 2;
-	int num_of_pins;
+	int numOfPins;
 	Integer[][][] channel;
 	int yind;
 	int numOfRows;
@@ -22,10 +22,10 @@ public class Genotype {
 		this.yind = ThreadLocalRandom.current().nextInt(2*ymin, 4*ymin+1);
 		this.numOfRows = yind+2;
 		this.max_extentions = 10;
-		this.num_of_pins = inputs.size();
+		this.numOfPins = inputs.size();
 		this.S = new ArrayList<Pin>();
 		this.T = new ArrayList<Pin>();
-		this.channel = new Integer[this.numOfRows][this.num_of_pins][layers];
+		this.channel = new Integer[this.numOfRows][this.numOfPins][layers];
 		for(int i = 0;i<inputs.size();i++) {
 			S.add(new Pin(inputs.get(i),i,false));
 		}
@@ -33,7 +33,7 @@ public class Genotype {
 			S.add(new Pin(outputs.get(i),i,true));
 		}
 		for (int y = 0; y < this.numOfRows; y++) {
-			for (int x = 0; x < this.num_of_pins; x++) {
+			for (int x = 0; x < this.numOfPins; x++) {
 				for (int z = 0; z < layers; z++) {
 					if(y==0) {
 						channel[y][x][z] = -1*outputs.get(x);
@@ -48,7 +48,7 @@ public class Genotype {
 	}
 	private void copyChannel(Integer[][][] tempChannel) {
 		for (int y = 0; y < this.numOfRows; y++) {
-			for (int x = 0; x < this.num_of_pins; x++) {
+			for (int x = 0; x < this.numOfPins; x++) {
 				for (int z = 0; z < layers; z++) {
 					tempChannel[y][x][z] = channel[y][x][z];
 				}
@@ -58,7 +58,7 @@ public class Genotype {
 	private void printTempChannel(Integer[][][] tempChannel) {
 		System.out.println("layer 0:");
 		for (int y = 0; y < this.numOfRows; y++) {
-			for (int x = 0; x < this.num_of_pins; x++) {
+			for (int x = 0; x < this.numOfPins; x++) {
 				System.out.print(tempChannel[y][x][0] + " ");
 			}
 			System.out.println(" ");
@@ -66,7 +66,7 @@ public class Genotype {
 		System.out.println(" ");
 		System.out.println("layer 1:");
 		for (int y = 0; y < this.numOfRows; y++) {
-			for (int x = 0; x < this.num_of_pins; x++) {
+			for (int x = 0; x < this.numOfPins; x++) {
 				System.out.print(tempChannel[y][x][1] + " ");
 			}
 			System.out.println(" ");
@@ -134,7 +134,7 @@ public class Genotype {
 			}
 		}else if(dir == Direction.RIGHT) {
 			index = column;
-			for(int x = column+1;x<num_of_pins;x++) {
+			for(int x = column+1;x<numOfPins;x++) {
 				if(channel[row][x][layer] == 0 && tempChannel[row][x][layer] == 0) {
 					index = x;
 				}
@@ -177,7 +177,7 @@ public class Genotype {
 		return numOfRows-1;
 	}
 	public int connectPins(Pin s,Pin t) {
-		Integer[][][] tempChannel = new Integer[this.numOfRows][this.num_of_pins][layers];
+		Integer[][][] tempChannel = new Integer[this.numOfRows][this.numOfPins][layers];
 		copyChannel(tempChannel);
 		//printTempChannel(tempChannel);
 		int maxNumOfIterations = 3*(Math.abs(s.getIndex()-t.getIndex()))+yind+10;
@@ -314,7 +314,9 @@ public class Genotype {
 			}
 			if(checkIfTwoPinsConnected(tempChannel,s,t) == true) {
 				System.out.println("found solution");
+				findShortestPathAndConnect(tempChannel, s, t);
 				printTempChannel(tempChannel);
+				printBoard();
 				return 1;
 			}
 			iterNum++;
@@ -327,7 +329,7 @@ public class Genotype {
 		if(startX == endX && startY == endY) {
 			return true;
 		}
-		if(startX >= num_of_pins || startX < 0 || startY < 0 || startY >= numOfRows) {
+		if(startX >= numOfPins || startX < 0 || startY < 0 || startY >= numOfRows) {
 			return false;
 		}
 		if(tempChannel[startY][startX][z] != pin_num) {
@@ -364,10 +366,10 @@ public class Genotype {
 			endY--;
 		}
 		int pin_num = s.getPinNum();
-		Integer[][][] channelForChecking = new Integer[this.numOfRows][this.num_of_pins][layers];
+		Integer[][][] channelForChecking = new Integer[this.numOfRows][this.numOfPins][layers];
 		for (int z = 0; z < 2; z++) {
 			for (int y = 0; y < this.numOfRows; y++) {
-				for (int x = 0; x < this.num_of_pins; x++) {
+				for (int x = 0; x < this.numOfPins; x++) {
 					if(channel[y][x][z] == pin_num || tempChannel[y][x][z] == pin_num) {
 						channelForChecking[y][x][z] = pin_num;
 					}else {
@@ -394,10 +396,10 @@ public class Genotype {
 			endY--;
 		}
 		int pin_num = s.getPinNum();
-		Point[][][] graph = new Point[this.numOfRows][this.num_of_pins][layers];
+		Point[][][] graph = new Point[this.numOfRows][this.numOfPins][layers];
 		for (int z = 0; z < 2; z++) {
 			for (int y = 0; y < this.numOfRows; y++) {
-				for (int x = 0; x < this.num_of_pins; x++) {
+				for (int x = 0; x < this.numOfPins; x++) {
 					if(channel[y][x][z] == pin_num || tempChannel[y][x][z] == pin_num) {
 						graph[y][x][z] = new Point(y,x,z);
 					}else {
@@ -406,8 +408,62 @@ public class Genotype {
 				}
 			}
 		}
+		int endZ = 0;
+		boolean reachedDest = false;
 		Queue<Point> queue = new LinkedList<>();
-		
+		graph[startY][startX][0].setDiscovered(true);
+		queue.add(graph[startY][startX][0]);
+		while(!queue.isEmpty() && !reachedDest ) {
+			Point p = queue.remove();
+			if(p.getX() == endX && p.getY() == endY) {
+				reachedDest = true;
+				endZ = p.getZ();
+				System.out.println("solution found");
+
+			}else {
+				if(p.getY() < numOfRows-2 && graph[p.getY()+1][p.getX()][p.getZ()] != null &&
+						!graph[p.getY()+1][p.getX()][p.getZ()].discovered) {
+					graph[p.getY()+1][p.getX()][p.getZ()].setDiscovered(true);
+					graph[p.getY()+1][p.getX()][p.getZ()].setParetn(p);
+					queue.add(graph[p.getY()+1][p.getX()][p.getZ()]);
+				}
+				if(p.getY() > 1 && graph[p.getY()-1][p.getX()][p.getZ()] != null &&
+						!graph[p.getY()-1][p.getX()][p.getZ()].discovered) {
+					graph[p.getY()-1][p.getX()][p.getZ()].setDiscovered(true);
+					graph[p.getY()-1][p.getX()][p.getZ()].setParetn(p);
+					queue.add(graph[p.getY()-1][p.getX()][p.getZ()]);
+				}
+				if(p.getX() < numOfPins-1 && graph[p.getY()][p.getX()+1][p.getZ()] != null && 
+						!graph[p.getY()][p.getX()+1][p.getZ()].discovered) {
+					graph[p.getY()][p.getX()+1][p.getZ()].setDiscovered(true);
+					graph[p.getY()][p.getX()+1][p.getZ()].setParetn(p);
+					queue.add(graph[p.getY()][p.getX()+1][p.getZ()]);
+				}
+				if(p.getX() > 0 && graph[p.getY()][p.getX()-1][p.getZ()] != null && 
+						!graph[p.getY()][p.getX()-1][p.getZ()].discovered) {
+					graph[p.getY()][p.getX()-1][p.getZ()].setDiscovered(true);
+					graph[p.getY()][p.getX()-1][p.getZ()].setParetn(p);
+					queue.add(graph[p.getY()][p.getX()-1][p.getZ()]);
+				}
+				int z2 = (p.getZ() == 1)? 0 : 1;
+				if( graph[p.getY()][p.getX()][z2] != null && !graph[p.getY()][p.getX()][z2].discovered ) {
+					graph[p.getY()][p.getX()][z2].setDiscovered(true);
+					graph[p.getY()][p.getX()][z2].setParetn(p);
+					queue.add(graph[p.getY()][p.getX()][z2]);
+				}
+			}
+		}
+		boolean pathDidNotEnd = true;
+		Point p = graph[endY][endX][endZ];
+		while(pathDidNotEnd) {
+			if(channel[p.getY()][p.getX()][p.getZ()]!=pin_num) {
+				channel[p.getY()][p.getX()][p.getZ()] = pin_num;
+			}
+			if(p.getX() == startX && p.getY() == startY) {
+				pathDidNotEnd = false;
+			}
+			p = p.parent;
+		}
 	}
 	public int randomSolution() {
 		Random randomGenerator = new Random();
@@ -464,7 +520,7 @@ public class Genotype {
 	public void printBoard() {
 		System.out.println("layer 0:");
 		for (int y = 0; y < this.numOfRows; y++) {
-			for (int x = 0; x < this.num_of_pins; x++) {
+			for (int x = 0; x < this.numOfPins; x++) {
 				System.out.print(channel[y][x][0] + " ");
 			}
 			System.out.println(" ");
@@ -472,7 +528,7 @@ public class Genotype {
 		System.out.println(" ");
 		System.out.println("layer 1:");
 		for (int y = 0; y < this.numOfRows; y++) {
-			for (int x = 0; x < this.num_of_pins; x++) {
+			for (int x = 0; x < this.numOfPins; x++) {
 				System.out.print(channel[y][x][1] + " ");
 			}
 			System.out.println(" ");
