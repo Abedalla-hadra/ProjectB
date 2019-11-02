@@ -28,4 +28,10 @@ public class Point {
 	public Point getParent() {
 		return parent;
 	}
+	public void setDiscovered(boolean val) {
+		discovered = val;
+	}
+	public void setParetn(Point p) {
+		parent = p;
+	}
 }
