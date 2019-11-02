@@ -116,7 +116,6 @@ public class Genotype {
 					index = y;
 				}
 			}
-			index++;
 		}else if(dir == Direction.UP) {
 			index = row;
 			for(int y = row - 1;y>0;y--) {
@@ -124,7 +123,6 @@ public class Genotype {
 					index = y;
 				}
 			}
-			index--;
 		}else if(dir == Direction.LEFT) {
 			index = column;
 			for(int x = column - 1 ;x>=0;x--) {
@@ -455,7 +453,7 @@ public class Genotype {
 		}
 		boolean pathDidNotEnd = true;
 		Point p = graph[endY][endX][endZ];
-		while(pathDidNotEnd) {
+		while(pathDidNotEnd && p != null) {
 			if(channel[p.getY()][p.getX()][p.getZ()]!=pin_num) {
 				channel[p.getY()][p.getX()][p.getZ()] = pin_num;
 			}
