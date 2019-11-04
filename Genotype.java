@@ -339,10 +339,7 @@ public class Genotype {
 		   recIsTherePath(tempChannel,pin_num,startX-1,startY,endX,endY,z) ||
 		   recIsTherePath(tempChannel,pin_num,startX,startY+1,endX,endY,z) ||
 		   recIsTherePath(tempChannel,pin_num,startX,startY-1,endX,endY,z) ||
-		   recIsTherePath(tempChannel,pin_num,startX+1,startY,endX,endY,z2) || 
-		   recIsTherePath(tempChannel,pin_num,startX-1,startY,endX,endY,z2) ||
-		   recIsTherePath(tempChannel,pin_num,startX,startY+1,endX,endY,z2) ||
-		   recIsTherePath(tempChannel,pin_num,startX,startY-1,endX,endY,z2)) {
+		   recIsTherePath(tempChannel,pin_num,startX,startY,endX,endY,z2)) {
 			return true;
 		}
 		tempChannel[startY][startX][z]= pin_num;
@@ -465,14 +462,52 @@ public class Genotype {
 	}
 	private void addRowOnChannel() {
 		int y = numOfRows-2;
-		int yIndexOfNewRow = randomNumInRange(1, y);
+		int yOfNewRow = randomNumInRange(1, y);
+		yOfNewRow = 1;
 		Integer[][][] newChannel = new Integer[this.numOfRows+1][this.numOfPins][layers];
+		this.numOfRows++;
 		for(int i = 0; i < numOfPins;i++) {
 			newChannel[0][i][0] = channel[0][i][0];
 			newChannel[0][i][1] = channel[0][i][1];
-			newChannel[numOfRows][i][0] = channel[0][i][0];
-			newChannel[numOfRows][i][1] = channel[0][i][1];
+			newChannel[numOfRows-1][i][0] = channel[numOfRows-2][i][0];
+			newChannel[numOfRows-1][i][1] = channel[numOfRows-2][i][1];
 		}
+		if(yOfNewRow == 1) {
+			for(int i = 0; i < numOfPins;i++) {
+				if(channel[yOfNewRow][i][0] == -channel[0][i][0]) {
+					newChannel[yOfNewRow][i][0] = channel[yOfNewRow][i][0];
+				}else {
+					newChannel[yOfNewRow][i][0] = 0;
+
+				}
+				if(channel[yOfNewRow][i][1] == -channel[0][i][1]) {
+					newChannel[yOfNewRow][i][1] = channel[yOfNewRow][i][1];
+				}else {
+					newChannel[yOfNewRow][i][1] = 0;
+				}
+			}
+			for(int row = yOfNewRow; row<numOfRows-2; row++) {
+				for(int col = 0; col<numOfPins; col++) {
+					newChannel[row+1][col][0] = channel[row][col][0];
+					newChannel[row+1][col][1] = channel[row][col][1];
+				}
+			}
+		}else if(yOfNewRow == numOfRows-3) {
+			for(int row = yOfNewRow; row<numOfRows-3; row++) {
+				for(int col = 0; col<numOfPins; col++) {
+					newChannel[row][col][0] = channel[row][col][0];
+					newChannel[row][col][1] = channel[row][col][1];
+				}
+			}
+			for(int i = 0; i < numOfPins;i++) {
+				if(channel[yOfNewRow][i][0] == -channel[numOfRows-2][i][0]) {
+					newChannel[yOfNewRow+1][i][0] = channel[yOfNewRow][i][0];
+				}else if(channel[yOfNewRow][i][1] == -channel[numOfRows-2][i][1]) {
+					newChannel[yOfNewRow+1][i][1] = channel[yOfNewRow][i][1];
+				}
+			}
+		}
+		channel = newChannel;
 		
 	}
 	public int randomSolution() {
@@ -567,6 +602,8 @@ public class Genotype {
 		s.randomSolution();
 		*/
 		s.connectPins(new Pin(1,0,false),new Pin(1,2,true));
+		/*s.addRowOnChannel();
+		s.printBoard();*/
 	}
 }
 
