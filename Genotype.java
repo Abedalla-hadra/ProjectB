@@ -107,34 +107,47 @@ public class Genotype {
 		}
 		return 0;
 	}
-	private int indexOfObstacle(Integer[][][] tempChannel,Direction dir,int row,int column,int layer) {
+	//there are some bugs here that needed to be fixed, when i find an obstacle i should return and not keep going
+	private int indexOfObstacle(Integer[][][] tempChannel,Direction dir,int row,int column,int layer,int pinNum) {
 		int index = 0;
 		if(dir == Direction.DOWN) {
 			index = row;
 			for(int y = row+1;y<numOfRows;y++) {
-				if(channel[y][column][layer] == 0 && tempChannel[y][column][layer] == 0) {
+				if(channel[y][column][layer] == 0 && tempChannel[y][column][layer] == 0 ||
+						channel[y][column][layer] == pinNum ||tempChannel[y][column][layer] == pinNum ) {
 					index = y;
+				}else {
+					return index;
 				}
 			}
 		}else if(dir == Direction.UP) {
 			index = row;
 			for(int y = row - 1;y>0;y--) {
-				if(channel[y][column][layer] == 0 && tempChannel[y][column][layer] == 0) {
+				if(channel[y][column][layer] == 0 && tempChannel[y][column][layer] == 0 ||
+						channel[y][column][layer] == pinNum ||tempChannel[y][column][layer] == pinNum) {
 					index = y;
+				}else {
+					return index;
 				}
 			}
 		}else if(dir == Direction.LEFT) {
 			index = column;
 			for(int x = column - 1 ;x>=0;x--) {
-				if(channel[row][x][layer] == 0 && tempChannel[row][x][layer] == 0 ) {
+				if(channel[row][x][layer] == 0 && tempChannel[row][x][layer] == 0 ||
+						channel[row][x][layer] == pinNum && tempChannel[row][x][layer] == pinNum) {
 					index = x;
+				}else {
+					return index;
 				}
 			}
 		}else if(dir == Direction.RIGHT) {
 			index = column;
 			for(int x = column+1;x<numOfPins;x++) {
-				if(channel[row][x][layer] == 0 && tempChannel[row][x][layer] == 0) {
+				if(channel[row][x][layer] == 0 && tempChannel[row][x][layer] == 0 ||
+						channel[row][x][layer] == pinNum && tempChannel[row][x][layer] == pinNum) {
 					index = x;
+				}else {
+					return index;
 				}
 			}
 		}
@@ -211,12 +224,31 @@ public class Genotype {
 		
 		while(iterNum < maxNumOfIterations ) {
 			if (iterNum == 0) {
-				tempChannel[yIndexOfS][xIndexOfS][sLayer] = s.getPinNum();
-				tempChannel[yIndexOfT][xIndexOfT][tLayer] = t.getPinNum();
 				sLayer = layerOfExtention(sDirection);
 				tLayer = layerOfExtention(tDirection);
-				int sObstacleIndex = indexOfObstacle(tempChannel, sDirection, yIndexOfS, xIndexOfS, sLayer);
-				int tObstacleIndex = indexOfObstacle(tempChannel, tDirection, yIndexOfT, xIndexOfT, tLayer);
+				if(channel[yIndexOfS][xIndexOfS][sLayer] != 0 && channel[yIndexOfS][xIndexOfS][sLayer] != s.getPinNum() 
+					&& channel[yIndexOfS][xIndexOfS][(sLayer+1)%2] != 0 && channel[yIndexOfS][xIndexOfS][(sLayer+1)%2] != s.getPinNum()) {
+					return 0;
+				}
+				if(channel[yIndexOfT][xIndexOfT][tLayer] != 0 && channel[yIndexOfT][xIndexOfT][tLayer] != t.getPinNum() 
+						&& channel[yIndexOfT][xIndexOfT][(tLayer+1)%2] != 0 && channel[yIndexOfT][xIndexOfT][(tLayer+1)%2] != t.getPinNum()) {
+					return 0;
+				}
+				if(channel[yIndexOfS][xIndexOfS][sLayer] != 0 && channel[yIndexOfS][xIndexOfS][sLayer] != s.getPinNum()) {
+					sLayer = (sLayer+1)%2;
+				}else if(channel[yIndexOfS][xIndexOfS][(sLayer+1)%2] != 0 && channel[yIndexOfS][xIndexOfS][(sLayer+1)%2] != s.getPinNum()) {
+					sLayer = (sLayer+1)%2;
+				}
+				if(channel[yIndexOfT][xIndexOfT][tLayer] != 0 && channel[yIndexOfT][xIndexOfT][tLayer] != t.getPinNum() ) {
+					tLayer = (sLayer+1)%2;
+				}else if(channel[yIndexOfT][xIndexOfT][(tLayer+1)%2] != 0 && channel[yIndexOfT][xIndexOfT][(tLayer+1)%2] != t.getPinNum()) {
+					tLayer = (sLayer+1)%2;
+				}
+				tempChannel[yIndexOfS][xIndexOfS][sLayer] = s.getPinNum();
+				tempChannel[yIndexOfT][xIndexOfT][tLayer] = t.getPinNum();
+				
+				int sObstacleIndex = indexOfObstacle(tempChannel, sDirection, yIndexOfS, xIndexOfS, sLayer,s.getPinNum());
+				int tObstacleIndex = indexOfObstacle(tempChannel, tDirection, yIndexOfT, xIndexOfT, tLayer,t.getPinNum());
 				/*
 				System.out.println("s layer: "+sLayer);
 				System.out.println("t layer: "+tLayer);
@@ -238,14 +270,20 @@ public class Genotype {
 			}else if(iterNum%2 == 1){
 				sLayer = layerOfExtention(sDirection);
 				tLayer = layerOfExtention(tDirection);
+				if(channel[yIndexOfS][xIndexOfS][sLayer] != 0 && channel[yIndexOfS][xIndexOfS][sLayer] != s.getPinNum()) {
+					continue;
+				}
+				if(channel[yIndexOfT][xIndexOfT][tLayer] != 0 && channel[yIndexOfT][xIndexOfT][tLayer] != t.getPinNum() ) {
+					continue;
+				}
 				tempChannel[yIndexOfS][xIndexOfS][sLayer] = s.getPinNum();
 				tempChannel[yIndexOfT][xIndexOfT][tLayer] = t.getPinNum();
 				//System.out.println("s layer: "+sLayer);
 				//System.out.println("t layer: "+tLayer);
-				int minXForS = indexOfObstacle(tempChannel, Direction.LEFT, yIndexOfS, xIndexOfS, sLayer);
-				int maxXForS = indexOfObstacle(tempChannel, Direction.RIGHT, yIndexOfS, xIndexOfS, sLayer);
-				int minXForT = indexOfObstacle(tempChannel, Direction.LEFT, yIndexOfT, xIndexOfT, tLayer);
-				int maxXForT = indexOfObstacle(tempChannel, Direction.RIGHT, yIndexOfT, xIndexOfT, tLayer);
+				int minXForS = indexOfObstacle(tempChannel, Direction.LEFT, yIndexOfS, xIndexOfS, sLayer,s.getPinNum());
+				int maxXForS = indexOfObstacle(tempChannel, Direction.RIGHT, yIndexOfS, xIndexOfS, sLayer,s.getPinNum());
+				int minXForT = indexOfObstacle(tempChannel, Direction.LEFT, yIndexOfT, xIndexOfT, tLayer,t.getPinNum());
+				int maxXForT = indexOfObstacle(tempChannel, Direction.RIGHT, yIndexOfT, xIndexOfT, tLayer,t.getPinNum());
 				/*
 				System.out.println("min xS "+minXForS);
 				System.out.println("max xS "+maxXForS);
@@ -282,14 +320,20 @@ public class Genotype {
 					tDirection = Direction.UP;
 				}
 			}else if(iterNum%2 == 0) {
-				tempChannel[yIndexOfS][xIndexOfS][sLayer] = s.getPinNum();
-				tempChannel[yIndexOfT][xIndexOfT][tLayer] = t.getPinNum();
 				sLayer = layerOfExtention(sDirection);
 				tLayer = layerOfExtention(tDirection);
-				int minYForS = indexOfObstacle(tempChannel, Direction.UP, yIndexOfS, xIndexOfS, sLayer);
-				int maxYForS = indexOfObstacle(tempChannel, Direction.DOWN, yIndexOfS, xIndexOfS, sLayer);
-				int minYForT = indexOfObstacle(tempChannel, Direction.UP, yIndexOfT, xIndexOfT, tLayer);
-				int maxYForT = indexOfObstacle(tempChannel, Direction.DOWN, yIndexOfT, xIndexOfT, tLayer);
+				if(channel[yIndexOfS][xIndexOfS][sLayer] != 0 && channel[yIndexOfS][xIndexOfS][sLayer] != s.getPinNum()) {
+					continue;
+				}
+				if(channel[yIndexOfT][xIndexOfT][tLayer] != 0 && channel[yIndexOfT][xIndexOfT][tLayer] != t.getPinNum() ) {
+					continue;
+				}
+				tempChannel[yIndexOfS][xIndexOfS][sLayer] = s.getPinNum();
+				tempChannel[yIndexOfT][xIndexOfT][tLayer] = t.getPinNum();
+				int minYForS = indexOfObstacle(tempChannel, Direction.UP, yIndexOfS, xIndexOfS, sLayer,s.getPinNum());
+				int maxYForS = indexOfObstacle(tempChannel, Direction.DOWN, yIndexOfS, xIndexOfS, sLayer,s.getPinNum());
+				int minYForT = indexOfObstacle(tempChannel, Direction.UP, yIndexOfT, xIndexOfT, tLayer,t.getPinNum());
+				int maxYForT = indexOfObstacle(tempChannel, Direction.DOWN, yIndexOfT, xIndexOfT, tLayer,t.getPinNum());
 				int newYindexForS = randomNumInRange(minYForS, maxYForS);
 				int newYindexForT = randomNumInRange(minYForT, maxYForT);
 				if(newYindexForS <= yIndexOfS) {
@@ -412,7 +456,7 @@ public class Genotype {
 			if(p.getX() == endX && p.getY() == endY) {
 				reachedDest = true;
 				endZ = p.getZ();
-				System.out.println("solution found");
+				//System.out.println("solution found");
 
 			}else {
 				if(p.getY() < numOfRows-2 && graph[p.getY()+1][p.getX()][p.getZ()] != null &&
@@ -462,7 +506,7 @@ public class Genotype {
 	private void addRowOnChannel() {
 		int y = numOfRows-2;
 		int yOfNewRow = randomNumInRange(1, y);
-		System.out.println("new row index = "+yOfNewRow);
+		//System.out.println("new row index = "+yOfNewRow);
 		Integer[][][] newChannel = new Integer[this.numOfRows+1][this.numOfPins][layers];
 		this.numOfRows++;
 		for(int i = 0; i < numOfPins;i++) {
@@ -644,8 +688,12 @@ public class Genotype {
 		/*s.connectPins(new Pin(1,0,false),new Pin(1,2,true));
 		s.addRowOnChannel();
 		*/
-		s.randomSolution();
-		s.printBoard();
+		if(s.randomSolution() == 1) {
+			System.out.println("solution found");
+			s.printBoard();
+		}else {
+			System.out.println("no solution");
+		}
 	}
 }
 
