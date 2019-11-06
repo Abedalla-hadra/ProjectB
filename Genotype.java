@@ -17,11 +17,11 @@ public class Genotype {
 	int numOfRows;
 	ArrayList<Pin> S;
 	ArrayList<Pin> T;
-	int max_extentions;
+	int maxExtension;
 	public Genotype(ArrayList<Integer> inputs, ArrayList<Integer> outputs, int ymin) {
 		this.yind = ThreadLocalRandom.current().nextInt(2*ymin, 4*ymin+1);
 		this.numOfRows = yind+2;
-		this.max_extentions = 10;
+		this.maxExtension = 10;
 		this.numOfPins = inputs.size();
 		this.S = new ArrayList<Pin>();
 		this.T = new ArrayList<Pin>();
@@ -180,7 +180,6 @@ public class Genotype {
 		//printTempChannel(tempChannel);
 		int maxNumOfIterations = 3*(Math.abs(s.getIndex()-t.getIndex()))+yind+10;
 		//System.out.println(yind);
-		boolean noValidSolution = false;
 		//System.out.println(maxNumOfIterations);
 		int iterNum = 0;
 		int tLayer ;
@@ -209,8 +208,8 @@ public class Genotype {
 			yIndexOfT = numOfRows-2;
 
 		}
-		boolean solutionFound = false;
-		while(!solutionFound && iterNum < 3/*maxNumOfIterations*/ && !noValidSolution) {
+		
+		while(iterNum < maxNumOfIterations ) {
 			if (iterNum == 0) {
 				tempChannel[yIndexOfS][xIndexOfS][sLayer] = s.getPinNum();
 				tempChannel[yIndexOfT][xIndexOfT][tLayer] = t.getPinNum();
@@ -311,17 +310,17 @@ public class Genotype {
 				}
 			}
 			if(checkIfTwoPinsConnected(tempChannel,s,t) == true) {
-				System.out.println("found solution");
+				//System.out.println("found solution");
 				findShortestPathAndConnect(tempChannel, s, t);
 				//printTempChannel(tempChannel);
-				printBoard();
+				//printBoard();
 				return 1;
 			}
 			iterNum++;
 		}
-		printTempChannel(tempChannel);
+		//printTempChannel(tempChannel);
 
-		return 1;
+		return 0;
 	}
 	private boolean recIsTherePath(Integer[][][] tempChannel,int pin_num,int startX,int startY,int endX,int endY,int z) {
 		if(startX == endX && startY == endY) {
@@ -587,8 +586,19 @@ public class Genotype {
 					T.add(t);
 				}
 			}
-			
-			System.out.print("pin s "+s.getPinNum()+" "+s.getIndex()+" pin t "+t.getPinNum()+" "+t.getIndex()+"\n");
+			int numOfExtension = 0;
+			boolean isPinsConnected = false;
+			while(numOfExtension < maxExtension && !isPinsConnected) {
+				isPinsConnected = (connectPins(s,t) == 1)? true:false;
+				if(!isPinsConnected) {
+					addRowOnChannel();
+					numOfExtension++;
+				}
+			}
+			if(!isPinsConnected) {
+				return 0;
+			}
+			//System.out.print("pin s "+s.getPinNum()+" "+s.getIndex()+" pin t "+t.getPinNum()+" "+t.getIndex()+"\n");
 		}
 		return 1;
 	}
@@ -631,8 +641,10 @@ public class Genotype {
 		s.printUnconnectedPins();
 		s.randomSolution();
 		*/
-		s.connectPins(new Pin(1,0,false),new Pin(1,2,true));
+		/*s.connectPins(new Pin(1,0,false),new Pin(1,2,true));
 		s.addRowOnChannel();
+		*/
+		s.randomSolution();
 		s.printBoard();
 	}
 }
