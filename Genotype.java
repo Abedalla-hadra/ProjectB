@@ -134,7 +134,7 @@ public class Genotype {
 			index = column;
 			for(int x = column - 1 ;x>=0;x--) {
 				if(channel[row][x][layer] == 0 && tempChannel[row][x][layer] == 0 ||
-						channel[row][x][layer] == pinNum && tempChannel[row][x][layer] == pinNum) {
+						channel[row][x][layer] == pinNum || tempChannel[row][x][layer] == pinNum) {
 					index = x;
 				}else {
 					return index;
@@ -144,7 +144,7 @@ public class Genotype {
 			index = column;
 			for(int x = column+1;x<numOfPins;x++) {
 				if(channel[row][x][layer] == 0 && tempChannel[row][x][layer] == 0 ||
-						channel[row][x][layer] == pinNum && tempChannel[row][x][layer] == pinNum) {
+						channel[row][x][layer] == pinNum || tempChannel[row][x][layer] == pinNum) {
 					index = x;
 				}else {
 					return index;
@@ -236,12 +236,8 @@ public class Genotype {
 				}
 				if(channel[yIndexOfS][xIndexOfS][sLayer] != 0 && channel[yIndexOfS][xIndexOfS][sLayer] != s.getPinNum()) {
 					sLayer = (sLayer+1)%2;
-				}else if(channel[yIndexOfS][xIndexOfS][(sLayer+1)%2] != 0 && channel[yIndexOfS][xIndexOfS][(sLayer+1)%2] != s.getPinNum()) {
-					sLayer = (sLayer+1)%2;
 				}
 				if(channel[yIndexOfT][xIndexOfT][tLayer] != 0 && channel[yIndexOfT][xIndexOfT][tLayer] != t.getPinNum() ) {
-					tLayer = (sLayer+1)%2;
-				}else if(channel[yIndexOfT][xIndexOfT][(tLayer+1)%2] != 0 && channel[yIndexOfT][xIndexOfT][(tLayer+1)%2] != t.getPinNum()) {
 					tLayer = (sLayer+1)%2;
 				}
 				tempChannel[yIndexOfS][xIndexOfS][sLayer] = s.getPinNum();
@@ -367,14 +363,15 @@ public class Genotype {
 		return 0;
 	}
 	private boolean recIsTherePath(Integer[][][] tempChannel,int pin_num,int startX,int startY,int endX,int endY,int z) {
-		if(startX == endX && startY == endY) {
-			return true;
-		}
-		if(startX >= numOfPins || startX < 0 || startY < 0 || startY >= numOfRows) {
+		
+		if(startX >= numOfPins || startX < 0 || startY < 1 || startY >= numOfRows-1) {
 			return false;
 		}
 		if(tempChannel[startY][startX][z] != pin_num) {
 			return false;
+		}
+		if(startX == endX && startY == endY) {
+			return true;
 		}
 		tempChannel[startY][startX][z]= -pin_num;
 		int z2 = (z == 1)? 0 : 1;
@@ -411,14 +408,14 @@ public class Genotype {
 					if(channel[y][x][z] == pin_num || tempChannel[y][x][z] == pin_num) {
 						channelForChecking[y][x][z] = pin_num;
 					}else {
-						channelForChecking[y][x][z] = channel[y][x][z];
+						channelForChecking[y][x][z] = 0;
 					}
 				}
 			}
 		}
 		return recIsTherePath(channelForChecking, pin_num, startX, startY, endX, endY, 0);
 	}
-	private void findShortestPathAndConnect(Integer[][][] tempChannel,Pin s,Pin e) {
+	private boolean findShortestPathAndConnect(Integer[][][] tempChannel,Pin s,Pin e) {
 		int startX = s.getIndex();
 		int startY = getYindexOfPin(s);
 		if(startY == 0) {
@@ -456,7 +453,6 @@ public class Genotype {
 			if(p.getX() == endX && p.getY() == endY) {
 				reachedDest = true;
 				endZ = p.getZ();
-				//System.out.println("solution found");
 
 			}else {
 				if(p.getY() < numOfRows-2 && graph[p.getY()+1][p.getX()][p.getZ()] != null &&
@@ -502,6 +498,7 @@ public class Genotype {
 			}
 			p = p.parent;
 		}
+		return true;
 	}
 	private void addRowOnChannel() {
 		int y = numOfRows-2;
