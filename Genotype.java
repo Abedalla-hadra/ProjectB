@@ -6,6 +6,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.Random;
 import java.util.LinkedList; 
 import java.util.Queue;
+import java.util.HashSet;
 enum Direction {
 	UP, DOWN, LEFT, RIGHT
 }
@@ -18,6 +19,8 @@ public class Genotype {
 	ArrayList<Pin> S;
 	ArrayList<Pin> T;
 	int maxExtension;
+	double F1;
+	double F2;
 	public Genotype(ArrayList<Integer> inputs, ArrayList<Integer> outputs, int ymin) {
 		this.yind = ThreadLocalRandom.current().nextInt(2*ymin, 4*ymin+1);
 		this.numOfRows = yind+2;
@@ -25,6 +28,8 @@ public class Genotype {
 		this.numOfPins = inputs.size();
 		this.S = new ArrayList<Pin>();
 		this.T = new ArrayList<Pin>();
+		this.F1 = -1;
+		this.F2 = -1;
 		this.channel = new Integer[this.numOfRows][this.numOfPins][layers];
 		for(int i = 0;i<inputs.size();i++) {
 			S.add(new Pin(inputs.get(i),i,false));
@@ -107,7 +112,7 @@ public class Genotype {
 		}
 		return 0;
 	}
-	//there are some bugs here that needed to be fixed, when i find an obstacle i should return and not keep going
+	
 	private int indexOfObstacle(Integer[][][] tempChannel,Direction dir,int row,int column,int layer,int pinNum) {
 		int index = 0;
 		if(dir == Direction.DOWN) {
@@ -186,6 +191,93 @@ public class Genotype {
 			return 0;
 		}
 		return numOfRows-1;
+	}
+	public void calcF1() {
+		this.F1 = (1/(double)yind);
+	}
+	public double getF1() {
+		return F1;
+	}
+	public double getF2() {
+		return F2;
+	}
+	// net length of net i of net segments according to the preferred direction of the layer
+	//preferred layer for vertical lines is 0
+	//preferred layer for horizontal lines is 1
+	private int lenthOfSegmentsInPreferredLayer(int net) {
+		int verticalSegments = 0;
+		int horizontalSegments = 0;
+		for(int row = 2; row < numOfRows - 1; row++) {
+			 for(int col = 0; col < numOfPins; col++) {
+				 if(channel[row-1][col][0] == net && channel[row][col][0] == net) {
+					 verticalSegments++;
+				 }
+			 }
+		}
+		for(int row = 1; row < numOfRows - 1; row++) {
+			 for(int col = 1; col < numOfPins; col++) {
+				 if(channel[row][col-1][1] == net && channel[row][col][1] == net) {
+					 horizontalSegments++;
+				 }
+			 }
+			 
+		 }
+		
+		return verticalSegments + horizontalSegments;
+	}
+	// net length of net i of net segments opposite to the preferred direction of the layer
+	//preferred layer for vertical lines is 0
+	//preferred layer for horizontal lines is 1
+	private int lenthOfSegmentsNotInPreferredLayer(int net) {
+		int verticalSegments = 0;
+		int horizontalSegments = 0;
+		for(int row = 2; row < numOfRows - 1; row++) {
+			 for(int col = 0; col < numOfPins; col++) {
+				 if(channel[row-1][col][1] == net && channel[row][col][1] == net) {
+					 verticalSegments++;
+				 }
+			 }
+		}
+		for(int row = 1; row < numOfRows - 1; row++) {
+			 for(int col = 1; col < numOfPins; col++) {
+				 if(channel[row][col-1][0] == net && channel[row][col][0] == net) {
+					 horizontalSegments++;
+				 }
+			 }
+			 
+		 }/*
+		System.out.println("net: "+net);
+		System.out.println("vertical: "+verticalSegments);
+		System.out.println("horizontal: "+horizontalSegments);
+		*/
+		return verticalSegments + horizontalSegments;
+	}
+	private int countNumOfVias() {
+		int numOfVias = 0;
+		for(int row = 1; row < numOfRows-1; row++) {
+			for(int col = 0; col < numOfPins; col++) {
+				if(channel[row][col][0] != 0 && channel[row][col][1] == channel[row][col][0]) {
+					numOfVias++;
+				}
+			}
+		}
+		return numOfVias;
+	}
+	public void calcF2() {
+		HashSet<Integer> set = new HashSet<>();
+		double a = 1.001;
+		double b = 2;
+		double sum = 0;
+		for(int i = 0 ; i < numOfPins; i++) {
+			if(!set.contains(channel[0][i][0])){
+				set.add(channel[0][i][0]);
+				int net = -channel[0][i][0];
+				sum += lenthOfSegmentsInPreferredLayer(net) + a*lenthOfSegmentsNotInPreferredLayer(net);
+						
+			}
+		}
+		sum+= countNumOfVias()*b;
+		F2 = 1/sum;
 	}
 	public int connectPins(Pin s,Pin t) {
 		Integer[][][] tempChannel = new Integer[this.numOfRows][this.numOfPins][layers];
@@ -506,6 +598,7 @@ public class Genotype {
 		//System.out.println("new row index = "+yOfNewRow);
 		Integer[][][] newChannel = new Integer[this.numOfRows+1][this.numOfPins][layers];
 		this.numOfRows++;
+		this.yind = this.numOfRows-2;
 		for(int i = 0; i < numOfPins;i++) {
 			newChannel[0][i][0] = channel[0][i][0];
 			newChannel[0][i][1] = channel[0][i][1];
@@ -688,6 +781,10 @@ public class Genotype {
 		if(s.randomSolution() == 1) {
 			System.out.println("solution found");
 			s.printBoard();
+			s.calcF1();
+			s.calcF2();
+			System.out.println("F1: "+s.getF1());
+			System.out.println("F2: "+s.getF2());
 		}else {
 			System.out.println("no solution");
 		}
