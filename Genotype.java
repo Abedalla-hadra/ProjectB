@@ -675,7 +675,6 @@ public class Genotype {
 	}
 	public int randomSolution() {
 		Random randomGenerator = new Random();
-		
 		while (!S.isEmpty()) {
 			int randomInt = randomGenerator.nextInt(S.size());
 			Pin s = S.get(randomInt);
@@ -720,6 +719,7 @@ public class Genotype {
 					T.add(t);
 				}
 			}
+			T.add(s);
 			int numOfExtension = 0;
 			boolean isPinsConnected = false;
 			while(numOfExtension < maxExtension && !isPinsConnected) {
@@ -734,6 +734,8 @@ public class Genotype {
 			}
 			//System.out.print("pin s "+s.getPinNum()+" "+s.getIndex()+" pin t "+t.getPinNum()+" "+t.getIndex()+"\n");
 		}
+		calcF1();
+		calcF2();
 		return 1;
 	}
 	public void printBoard() {
@@ -768,7 +770,7 @@ public class Genotype {
 		ArrayList<Integer> out = new ArrayList<Integer>(Arrays.asList(2, 3,1));
 		ArrayList<Integer> in = new ArrayList<Integer>(Arrays.asList(1,2,3));
 		Genotype s = new Genotype(in, out, 2);
-		//int y = s.getYindexOfPin(new Pin(1,0,false));
+				//int y = s.getYindexOfPin(new Pin(1,0,false));
 		//System.out.print(y);
 		//s.printBoard();
 		/*
@@ -781,8 +783,6 @@ public class Genotype {
 		if(s.randomSolution() == 1) {
 			System.out.println("solution found");
 			s.printBoard();
-			s.calcF1();
-			s.calcF2();
 			System.out.println("F1: "+s.getF1());
 			System.out.println("F2: "+s.getF2());
 		}else {

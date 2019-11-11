@@ -3,6 +3,9 @@ package ProjectB;
 import java.awt.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
@@ -149,11 +152,37 @@ public class Solution {
 	/********************/
 	public static void main(String[] args) {
 
-		ArrayList<Integer> in = new ArrayList<Integer>(Arrays.asList(1, 2, 3));
-		ArrayList<Integer> out = new ArrayList<Integer>(Arrays.asList(2, 3, 1));
-		Solution s = new Solution(in, out, 3);
-		s.printBoard();
+		ArrayList<Integer> out = new ArrayList<Integer>(Arrays.asList(2, 3,1));
+		ArrayList<Integer> in = new ArrayList<Integer>(Arrays.asList(1,2,3));
+		ArrayList<Genotype> channels = new ArrayList<>();
+		int count = 0;
+		Comparator<Genotype> compareById = (Genotype o1, Genotype o2) -> {if(o1.getF1() == o2.getF1()) {
+	    	if(o1.getF2() > o2.getF2()) {
+	    		return 1;
+	    	}else {
+	    		return -1;
+	    	}
+	    }else{
+	    	if(o1.getF1() > o2.getF1()) {
+	    		return 1;
+	    	}else {
+	    		return -1;
+	    	}
+	    }};
+		while(count <6) {
+			Genotype s = new Genotype(in, out, 2);
+			if(s.randomSolution() == 1) {
+				channels.add(s);
+				count++;
+			}
+
+		}
+		Collections.sort(channels,compareById);
+		for(int i = 0; i < 6; i++) {
+			System.out.println("F1: "+channels.get(i).getF1()+" F2: "+channels.get(i).getF2());
+		}
 	}
+	
 	/********************/
 	/********************/
 
