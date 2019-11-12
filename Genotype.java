@@ -21,6 +21,7 @@ public class Genotype {
 	int maxExtension;
 	double F1;
 	double F2;
+	double fitness;
 	public Genotype(ArrayList<Integer> inputs, ArrayList<Integer> outputs, int ymin) {
 		this.yind = ThreadLocalRandom.current().nextInt(2*ymin, 4*ymin+1);
 		this.numOfRows = yind+2;
@@ -30,6 +31,7 @@ public class Genotype {
 		this.T = new ArrayList<Pin>();
 		this.F1 = -1;
 		this.F2 = -1;
+		this.fitness = -1;
 		this.channel = new Integer[this.numOfRows][this.numOfPins][layers];
 		for(int i = 0;i<inputs.size();i++) {
 			S.add(new Pin(inputs.get(i),i,false));
@@ -59,6 +61,12 @@ public class Genotype {
 				}
 			}
 		}
+	}
+	public void setFitness(double _fitness) {
+		fitness = _fitness;
+	}
+	public double getFitness() {
+		return fitness;
 	}
 	private void printTempChannel(Integer[][][] tempChannel) {
 		System.out.println("layer 0:");
@@ -741,18 +749,35 @@ public class Genotype {
 	public void printBoard() {
 		System.out.println("layer 0:");
 		for (int y = 0; y < this.numOfRows; y++) {
-			for (int x = 0; x < this.numOfPins; x++) {
-				System.out.print(channel[y][x][0] + " ");
+			if(y != 0 && y != numOfRows-1) {
+				System.out.print(" ");
 			}
-			System.out.println(" ");
+			
+			for (int x = 0; x < this.numOfPins; x++) {
+				if(y != 0 && y != numOfRows-1) {
+					System.out.print(channel[y][x][0] + "  ");
+				}else {
+					System.out.print(channel[y][x][0] + " ");
+				}
+				
+			}
+			System.out.println();
 		}
 		System.out.println(" ");
 		System.out.println("layer 1:");
 		for (int y = 0; y < this.numOfRows; y++) {
-			for (int x = 0; x < this.numOfPins; x++) {
-				System.out.print(channel[y][x][1] + " ");
+			if (y != 0 && y != numOfRows - 1) {
+				System.out.print(" ");
 			}
-			System.out.println(" ");
+			for (int x = 0; x < this.numOfPins; x++) {
+				if (y != 0 && y != numOfRows - 1) {
+					System.out.print(channel[y][x][1] + "  ");
+				} else {
+					System.out.print(channel[y][x][1] + " ");
+				}
+			}
+
+			System.out.println();
 		}
 
 	}

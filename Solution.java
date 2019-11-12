@@ -15,147 +15,23 @@ public class Solution {
 	/********************/
 	static int layers = 2;
 	ArrayList<Integer> inputs, outputs; // input and output pins
-	int y; // y of 2D array including 2 colomns for the pins
-	int x; // number of pins
-	Integer[][][] solution;
+	int sizeOfPopulation;
 
 	/********************/
 	/*
 	 * Returns an empty solution given the problem input and output pins.
 	 */
-	public Solution(ArrayList<Integer> inputs, ArrayList<Integer> outputs, int y) {
-		if (inputs.isEmpty() || outputs.isEmpty() || y <= 0 || inputs.size() != outputs.size()) {
+	public Solution(ArrayList<Integer> inputs, ArrayList<Integer> outputs) {
+		if (inputs.isEmpty() || outputs.isEmpty()  || inputs.size() != outputs.size()) {
 			// throw exception ;
 		}
-		this.x = inputs.size();
-		this.y = y + 2;
 		this.inputs = new ArrayList<Integer>(inputs);
 		this.outputs = new ArrayList<Integer>(outputs);
-		solution = new Integer[x][this.y][layers];
-		// init all board to 0
-		for (int i = 0; i < this.x; i++) {
-			for (int j = 0; j < this.y; j++) {
-				for (int k = 0; k < layers; k++) {
-					solution[i][j][k] = 0;
-				}
-			}
-		}
-
-		int i = 0;
-		for (int iter : this.inputs) {
-
-			solution[i][0][0] = -1 * iter;
-			i++;
-		}
-		i = 0;
-		for (int iter : this.outputs) {
-			solution[i][this.y - 1][0] = -1 * iter;
-			i++;
-		}
-	}
-
-	/********************/
-	/*
-	 * Given an empty solution of the problem changes it to a random valid of
-	 * the problem.
-	 */
-	public void createRandomSolution() {
-
-		// init S and T lists
-
-		// S = pins not connected yet to any other pin
-		// T = pins with connection to at least one more pin
-
-		ArrayList<Integer> S = new ArrayList<>();
-
-		// i think the list should be of Pair<int,Integer> where int is the
-		// index and Integer is the pin
-		// we should discuss it though :P
-		S.addAll(this.inputs);
-		S.addAll(this.outputs);
-		ArrayList<Integer> T = new ArrayList<>();
-
-		while (!S.isEmpty()) {
-			// choose random pin from S
-			Random rand = new Random();
-			// Obtain a number between [0 - x].
-			int randIndex = rand.nextInt(this.x);
-			int randPin = solution[randIndex][0][0];
-			S.remove(randPin);
-			int i = 0;
-			if (T.contains(randPin)) {
-				for (i = 0; i < T.size(); i++) {
-					if (T.get(i) == randPin) {
-						break;
-					}
-				}
-				connectTwoPins(solution[randIndex][0][0], T.get(i));
-				T.add(randPin);
-			} else {
-				// choose random pin from S with the same net
-			}
-
-		}
-	}
-
-	/********************/
-	/*
-	 * Given two pins connect them randomly.
-	 */
-	public void connectTwoPins(Integer a, Integer b) {
-
-	}
-
-	/********************/
-	/*
-	 * Given an incomplete solution of the problem completes it to a random
-	 * valid of the problem.
-	 */
-	public void completeRandomSolution() {
-
-		// init S and T sets
-
-		ArrayList<Integer> S = new ArrayList<>();
-		ArrayList<Integer> T = new ArrayList<>();
-
-	}
-
-	/********************/
-	public boolean isSolutionValid() {
+		this.sizeOfPopulation = 6;
 		
-		//recursive check
-		//every pin is connected to every pin of the same net
-
-		return true;
 	}
-
-	/********************/
-	public void printBoard() {
-		System.out.println("layer 0:");
-		for (int i = 0; i < this.x; i++) {
-			for (int j = 0; j < this.y; j++) {
-				System.out.print(solution[i][j][0] + " ");
-			}
-			System.out.println(" ");
-		}
-		System.out.println(" ");
-		System.out.println("layer 1:");
-		for (int i = 0; i < this.x; i++) {
-			for (int j = 0; j < this.y; j++) {
-				System.out.print(solution[i][j][1] + " ");
-			}
-			System.out.println(" ");
-		}
-
-	}
-
-	/********************/
-	public static void main(String[] args) {
-
-		ArrayList<Integer> out = new ArrayList<Integer>(Arrays.asList(2, 3,1));
-		ArrayList<Integer> in = new ArrayList<Integer>(Arrays.asList(1,2,3));
-		ArrayList<Genotype> channels = new ArrayList<>();
-		int count = 0;
+	private void calcFitnessOfPopulation(ArrayList<Genotype> channels) {
+		//lambda for sorting channels by their fitness
 		Comparator<Genotype> compareById = (Genotype o1, Genotype o2) -> {if(o1.getF1() == o2.getF1()) {
 	    	if(o1.getF2() > o2.getF2()) {
 	    		return 1;
@@ -169,6 +45,51 @@ public class Solution {
 	    		return -1;
 	    	}
 	    }};
+		Collections.sort(channels,compareById);
+		int startIndex = 0;
+		int endIndex = 0;
+		for(int i = 1; i < channels.size()+1; i++) {
+			if(i == channels.size() && startIndex == i-1) {
+				channels.get(startIndex).setFitness(channels.get(startIndex).getF1());
+			}
+			else if( i < channels.size() && channels.get(startIndex).getF1() == channels.get(i).getF1()) {
+				endIndex = i;
+			}else {
+				channels.get(startIndex).setFitness(channels.get(startIndex).getF1());
+				if(endIndex < channels.size()-1) {
+					double f1OfEndp1 = channels.get(endIndex+1).getF1();//F1 of Pend+1
+					double f1OfEnd = channels.get(endIndex).getF1();//F1 of Pend
+					double fitness = f1OfEndp1 - (f1OfEndp1-f1OfEnd)/(endIndex-startIndex+1);
+					channels.get(endIndex).setFitness(fitness);
+				}else {
+					channels.get(endIndex).setFitness(channels.get(endIndex).getF1());
+				}
+				for(int x = startIndex+1; x < endIndex; x++) {
+					double fitnessPstart = channels.get(startIndex).getFitness();
+					double fitnessPend = channels.get(endIndex).getFitness();
+					double deltaF = fitnessPend - fitnessPstart;
+					double deltaF2 = channels.get(endIndex).getF2() - channels.get(startIndex).getF2();
+					double fitnessPx = fitnessPend - (deltaF*(channels.get(endIndex).getF2()-channels.get(x).getF2()))/deltaF2;
+					channels.get(x).setFitness(fitnessPx);
+				}
+				startIndex = i;
+				endIndex = i;
+			}
+		}
+		for(int i = 0; i < 6; i++) {
+			System.out.println("Fitness: "+channels.get(i).getFitness());
+		}
+	}
+
+	/********************/
+	public static void main(String[] args) {
+
+		ArrayList<Integer> out = new ArrayList<Integer>(Arrays.asList(2, 3,1));
+		ArrayList<Integer> in = new ArrayList<Integer>(Arrays.asList(1,2,3));
+		Solution sol = new Solution(out, in);
+		ArrayList<Genotype> channels = new ArrayList<>();
+		int count = 0;
+		
 		while(count <6) {
 			Genotype s = new Genotype(in, out, 2);
 			if(s.randomSolution() == 1) {
@@ -177,10 +98,25 @@ public class Solution {
 			}
 
 		}
+		Comparator<Genotype> compareById = (Genotype o1, Genotype o2) -> {if(o1.getF1() == o2.getF1()) {
+	    	if(o1.getF2() > o2.getF2()) {
+	    		return 1;
+	    	}else {
+	    		return -1;
+	    	}
+	    }else{
+	    	if(o1.getF1() > o2.getF1()) {
+	    		return 1;
+	    	}else {
+	    		return -1;
+	    	}
+	    }};
 		Collections.sort(channels,compareById);
 		for(int i = 0; i < 6; i++) {
 			System.out.println("F1: "+channels.get(i).getF1()+" F2: "+channels.get(i).getF2());
 		}
+		System.out.println("calculating Fitness");
+		sol.calcFitnessOfPopulation(channels);
 	}
 	
 	/********************/
