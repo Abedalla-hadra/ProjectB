@@ -30,6 +30,33 @@ public class Solution {
 		this.sizeOfPopulation = 6;
 		
 	}
+	private void preScale(double umax, double uavg, double umin,ArrayList<Double> ab) {
+		double fmultiple = 2.0, delta;
+		if(umin > (fmultiple*uavg - umax)/(fmultiple - 1.0)) {
+			delta = umax - uavg;
+			ab.add(((fmultiple - 1.0)*uavg)/delta); //a
+			ab.add((uavg*(umax -fmultiple*uavg))/delta);
+		}else {
+			delta = uavg - umin;
+			ab.add((uavg/delta));
+			ab.add(((-umin*uavg)/delta));
+		}
+		System.out.println("a= "+ab.get(0)+" b= "+ab.get(1));
+	}
+	private double scalePop(ArrayList<Genotype> channels, double max, double avg, double min) {
+		
+		double sumFitness = 0;
+		ArrayList<Double> ab = new ArrayList<>();
+		preScale(max, avg, min, ab);
+		Double a = new Double(ab.get(0));
+		Double b = new Double(ab.get(1));
+		for(int i = 0; i < channels.size(); i++) {
+			double fitness = a*channels.get(i).getFitness() + b;
+			channels.get(i).setFitness(fitness);
+			sumFitness += fitness;
+		}
+		return sumFitness;
+	}
 	private void calcFitnessOfPopulation(ArrayList<Genotype> channels) {
 		//lambda for sorting channels by their fitness
 		Comparator<Genotype> compareById = (Genotype o1, Genotype o2) -> {if(o1.getF1() == o2.getF1()) {
@@ -79,7 +106,16 @@ public class Solution {
 				endIndex = i;
 			}
 		}
-		
+		for(int i = 0; i < channels.size(); i++) {
+			System.out.println("Fitness: "+channels.get(i).getFitness());
+		}
+		double max = channels.get(channels.size() -1).getFitness() , min = channels.get(0).getFitness() , avg , sumFitness = 0;
+		for(int i = 0; i < channels.size(); i++) {
+			sumFitness += channels.get(i).getFitness();
+		}
+		avg = sumFitness/((double)channels.size());
+		sumFitness = scalePop(channels,max, avg, min);
+		System.out.println("sum Fitness: "+sumFitness);
 	}
 
 	/********************/
@@ -113,12 +149,12 @@ public class Solution {
 	    	}
 	    }};
 		Collections.sort(channels,compareById);
-		for(int i = 0; i < 6; i++) {
+		for(int i = 0; i < channels.size(); i++) {
 			System.out.println("F1: "+channels.get(i).getF1()+" F2: "+channels.get(i).getF2());
 		}
 		System.out.println("calculating Fitness");
 		sol.calcFitnessOfPopulation(channels);
-		for(int i = 0; i < 6; i++) {
+		for(int i = 0; i < channels.size(); i++) {
 			System.out.println("Fitness: "+channels.get(i).getFitness());
 		}
 	}
