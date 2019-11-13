@@ -68,6 +68,10 @@ public class Genotype {
 	public double getFitness() {
 		return fitness;
 	}
+	//returns now of rows without counting the first and the last row
+	public int getNumOfRows() {
+		return yind;
+	}
 	private void printTempChannel(Integer[][][] tempChannel) {
 		System.out.println("layer 0:");
 		for (int y = 0; y < this.numOfRows; y++) {
@@ -290,10 +294,9 @@ public class Genotype {
 	public int connectPins(Pin s,Pin t) {
 		Integer[][][] tempChannel = new Integer[this.numOfRows][this.numOfPins][layers];
 		copyChannel(tempChannel);
-		//printTempChannel(tempChannel);
+		
 		int maxNumOfIterations = 3*(Math.abs(s.getIndex()-t.getIndex()))+yind+10;
-		//System.out.println(yind);
-		//System.out.println(maxNumOfIterations);
+		
 		int iterNum = 0;
 		int tLayer ;
 		int sLayer ;
@@ -345,16 +348,10 @@ public class Genotype {
 				
 				int sObstacleIndex = indexOfObstacle(tempChannel, sDirection, yIndexOfS, xIndexOfS, sLayer,s.getPinNum());
 				int tObstacleIndex = indexOfObstacle(tempChannel, tDirection, yIndexOfT, xIndexOfT, tLayer,t.getPinNum());
-				/*
-				System.out.println("s layer: "+sLayer);
-				System.out.println("t layer: "+tLayer);
-				*/
+			
 				int newYindexForS = randomNumInRange(yIndexOfS, sObstacleIndex);
 				int newYindexForT = randomNumInRange(yIndexOfT, tObstacleIndex);
-				/*
-				System.out.println("new y for s : "+newYindexForS);
-				System.out.println("new y for t : "+newYindexForT);
-				*/
+				
 				updateTempChannel(tempChannel, sDirection, yIndexOfS, xIndexOfS, sLayer, newYindexForS, s.getPinNum());
 				updateTempChannel(tempChannel, tDirection, yIndexOfT, xIndexOfT, tLayer, newYindexForT, t.getPinNum());
 				yIndexOfS = newYindexForS;
@@ -374,24 +371,14 @@ public class Genotype {
 				}
 				tempChannel[yIndexOfS][xIndexOfS][sLayer] = s.getPinNum();
 				tempChannel[yIndexOfT][xIndexOfT][tLayer] = t.getPinNum();
-				//System.out.println("s layer: "+sLayer);
-				//System.out.println("t layer: "+tLayer);
 				int minXForS = indexOfObstacle(tempChannel, Direction.LEFT, yIndexOfS, xIndexOfS, sLayer,s.getPinNum());
 				int maxXForS = indexOfObstacle(tempChannel, Direction.RIGHT, yIndexOfS, xIndexOfS, sLayer,s.getPinNum());
 				int minXForT = indexOfObstacle(tempChannel, Direction.LEFT, yIndexOfT, xIndexOfT, tLayer,t.getPinNum());
 				int maxXForT = indexOfObstacle(tempChannel, Direction.RIGHT, yIndexOfT, xIndexOfT, tLayer,t.getPinNum());
-				/*
-				System.out.println("min xS "+minXForS);
-				System.out.println("max xS "+maxXForS);
-				System.out.println("min xT "+minXForT);
-				System.out.println("max xT "+maxXForT);
-				*/
+			
 				int newXindexForS = randomNumInRange(minXForS,maxXForS);
 				int newXindexForT = randomNumInRange(minXForT,maxXForT);
-				/*
-				System.out.println("new xS "+newXindexForS);
-				System.out.println("new xT "+newXindexForT);
-				*/
+				
 				if(newXindexForS <= xIndexOfS) {
 					updateTempChannel(tempChannel, Direction.LEFT, yIndexOfS, xIndexOfS, sLayer, newXindexForS, s.getPinNum());
 				}else {
@@ -432,6 +419,8 @@ public class Genotype {
 				int maxYForT = indexOfObstacle(tempChannel, Direction.DOWN, yIndexOfT, xIndexOfT, tLayer,t.getPinNum());
 				int newYindexForS = randomNumInRange(minYForS, maxYForS);
 				int newYindexForT = randomNumInRange(minYForT, maxYForT);
+				
+				
 				if(newYindexForS <= yIndexOfS) {
 					updateTempChannel(tempChannel, Direction.UP, yIndexOfS, xIndexOfS, sLayer, newYindexForS, s.getPinNum());
 				}else {

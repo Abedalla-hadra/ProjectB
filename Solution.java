@@ -62,7 +62,10 @@ public class Solution {
 					double fitness = f1OfEndp1 - (f1OfEndp1-f1OfEnd)/(endIndex-startIndex+1);
 					channels.get(endIndex).setFitness(fitness);
 				}else {
-					channels.get(endIndex).setFitness(channels.get(endIndex).getF1());
+					double f1OfEndp1 = 1/((double)(channels.get(endIndex).getNumOfRows())-1);
+					double f1OfEnd = channels.get(endIndex).getF1();//F1 of Pend
+					double fitness = f1OfEndp1 - (f1OfEndp1-f1OfEnd)/(endIndex-startIndex+1);
+					channels.get(endIndex).setFitness(fitness);
 				}
 				for(int x = startIndex+1; x < endIndex; x++) {
 					double fitnessPstart = channels.get(startIndex).getFitness();
@@ -76,9 +79,7 @@ public class Solution {
 				endIndex = i;
 			}
 		}
-		for(int i = 0; i < 6; i++) {
-			System.out.println("Fitness: "+channels.get(i).getFitness());
-		}
+		
 	}
 
 	/********************/
@@ -117,6 +118,9 @@ public class Solution {
 		}
 		System.out.println("calculating Fitness");
 		sol.calcFitnessOfPopulation(channels);
+		for(int i = 0; i < 6; i++) {
+			System.out.println("Fitness: "+channels.get(i).getFitness());
+		}
 	}
 	
 	/********************/
