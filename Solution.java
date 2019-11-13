@@ -16,7 +16,7 @@ public class Solution {
 	static int layers = 2;
 	ArrayList<Integer> inputs, outputs; // input and output pins
 	int sizeOfPopulation;
-
+	double fitnessSum;
 	/********************/
 	/*
 	 * Returns an empty solution given the problem input and output pins.
@@ -28,7 +28,7 @@ public class Solution {
 		this.inputs = new ArrayList<Integer>(inputs);
 		this.outputs = new ArrayList<Integer>(outputs);
 		this.sizeOfPopulation = 6;
-		
+		this.fitnessSum = 0;
 	}
 	private void preScale(double umax, double uavg, double umin,ArrayList<Double> ab) {
 		double fmultiple = 2.0, delta;
@@ -45,7 +45,7 @@ public class Solution {
 	}
 	private double scalePop(ArrayList<Genotype> channels, double max, double avg, double min) {
 		
-		double sumFitness = 0;
+		double _fitnessSum = 0;
 		ArrayList<Double> ab = new ArrayList<>();
 		preScale(max, avg, min, ab);
 		Double a = new Double(ab.get(0));
@@ -53,9 +53,9 @@ public class Solution {
 		for(int i = 0; i < channels.size(); i++) {
 			double fitness = a*channels.get(i).getFitness() + b;
 			channels.get(i).setFitness(fitness);
-			sumFitness += fitness;
+		    _fitnessSum += fitness;
 		}
-		return sumFitness;
+		return _fitnessSum;
 	}
 	private void calcFitnessOfPopulation(ArrayList<Genotype> channels) {
 		//lambda for sorting channels by their fitness
@@ -109,13 +109,24 @@ public class Solution {
 		for(int i = 0; i < channels.size(); i++) {
 			System.out.println("Fitness: "+channels.get(i).getFitness());
 		}
-		double max = channels.get(channels.size() -1).getFitness() , min = channels.get(0).getFitness() , avg , sumFitness = 0;
+		double max = channels.get(channels.size() -1).getFitness() , min = channels.get(0).getFitness() , avg;
 		for(int i = 0; i < channels.size(); i++) {
-			sumFitness += channels.get(i).getFitness();
+			fitnessSum += channels.get(i).getFitness();
 		}
-		avg = sumFitness/((double)channels.size());
-		sumFitness = scalePop(channels,max, avg, min);
-		System.out.println("sum Fitness: "+sumFitness);
+		avg = fitnessSum/((double)channels.size());
+		this.fitnessSum = scalePop(channels,max, avg, min);
+		System.out.println("sum Fitness: "+fitnessSum);
+	}
+	public Genotype selection(ArrayList<Genotype> channels) {
+		ArrayList<Double> probs = new ArrayList<Double>();
+		for(int i = channels.size()-1; i >= 0; i--) {
+			if(channels.get(i).getFitness() > 0.0) {
+				probs.add(channels.get(i).getFitness()/fitnessSum);
+			}
+		}
+		DiscreteDistribution distribution = new DiscreteDistribution(probs);
+		int randChannel = distribution.randomSample();
+		return channels.get(channels.size()-1-randChannel);
 	}
 
 	/********************/
@@ -157,6 +168,8 @@ public class Solution {
 		for(int i = 0; i < channels.size(); i++) {
 			System.out.println("Fitness: "+channels.get(i).getFitness());
 		}
+		double fitness = sol.selection(channels).getFitness();
+		System.out.println(fitness);
 	}
 	
 	/********************/
