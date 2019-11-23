@@ -67,8 +67,56 @@ public class Crossover {
 		//printChannel(parent1,numOfRowsP1);
 		System.out.println(xc);
 		printChannel(subP1,numOfRowsP1);
-		printChannel(subP2,numOfRowsP2);
+		subP1 = deleteUnoccupiedRows(subP1,numOfRowsP1);
+		subP2 = deleteUnoccupiedRows(subP2,numOfRowsP2);
+		int subP1NumRows = subP1.length;
+		int subP2NumRows = subP2.length;
+		printChannel(subP2,subP2.length);
+		//printChannel(subP2,numOfRowsP2);
 
+	}
+	private Integer[][][] deleteUnoccupiedRows(Integer[][][] sub,int numOfRows) {
+		
+		ArrayList<Integer> rowsToKeep = new ArrayList<Integer>();
+		for(int row = 1; row < numOfRows-1; row++) {
+			int firstLayerLastX = sub[row][0][0];
+			int secondLayerLastX = sub[row][0][1];
+			boolean rowAdded = false;
+			if(row == 1 || row == numOfRows-2 ) {
+				rowsToKeep.add(row);
+			}else {
+				for(int col = 1; col <numOfPins && !rowAdded; col++ ) {
+					if(firstLayerLastX != 0 && sub[row][col][0] == firstLayerLastX) {
+						rowsToKeep.add(row);
+						rowAdded = true;
+					}else if(secondLayerLastX != 0 && sub[row][col][1] == secondLayerLastX) {
+						rowsToKeep.add(row);
+						rowAdded = true;
+					}else if(sub[row][col][0] != 0 && sub[row][col][0] == sub[row][col][1]) {
+						rowsToKeep.add(row);
+						rowAdded = true;
+					}
+					firstLayerLastX = sub[row][col][0];
+					secondLayerLastX = sub[row][col][1];
+				}
+			}
+		}
+		int newRowsNum = rowsToKeep.size()+2;
+		Integer[][][] newSub = new Integer[newRowsNum][numOfPins][2];
+		for(int col = 0 ; col < numOfPins; col++) {
+			newSub[0][col][0] = sub[0][col][0];
+			newSub[0][col][1] = sub[0][col][1];
+			newSub[newRowsNum-1][col][0] = sub[numOfRows-1][col][0];
+			newSub[newRowsNum-1][col][1] = sub[numOfRows-1][col][1];
+		}
+		for (int row = 1; row < newRowsNum - 1; row++) {
+			int rowToCopy = rowsToKeep.get(row - 1);
+			for (int col = 0; col < numOfPins; col++) {
+				newSub[row][col][0] = sub[rowToCopy][col][0];
+				newSub[row][col][1] = sub[rowToCopy][col][1];
+			}
+		}
+		return newSub;
 	}
 	private void updateSubP1(int xc,Integer[][][] subP1) {
 		for(int i = 0; i <= xc; i++) {
