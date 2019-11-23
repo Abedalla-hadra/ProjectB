@@ -53,6 +53,29 @@ public class Genotype {
 			}
 		}
 	}
+	public Genotype(Integer[][][] _channel,int _numOfRows,int _numOfPins) {
+		this.numOfRows = _numOfRows;
+		this.yind = _numOfRows - 2;
+		this.maxExtension = 10;
+		this.numOfPins = _numOfPins;
+		this.F1 = -1;
+		this.F2 = -1;
+		this.fitness = -1;
+		this.channel = new Integer[this.numOfRows][this.numOfPins][layers];
+		for(int z = 0; z < 2; z++) {
+			for(int row = 0; row < _numOfRows;row++) {
+				for(int col = 0; col < _numOfPins; col++) {
+					channel[row][col][z] = _channel[row][col][z];
+				}
+			}
+		}
+		calcF1();
+		calcF2();
+	}
+	public int getNumOfPins() {
+		return numOfPins;
+	}
+	
 	private void copyChannel(Integer[][][] tempChannel) {
 		for (int y = 0; y < this.numOfRows; y++) {
 			for (int x = 0; x < this.numOfPins; x++) {
@@ -68,7 +91,19 @@ public class Genotype {
 	public double getFitness() {
 		return fitness;
 	}
-	//returns now of rows without counting the first and the last row
+	public Integer[][][] getChannel(){
+		Integer[][][] newChannel = new Integer[this.numOfRows][this.numOfPins][layers];
+		for(int z = 0; z < 2; z++) {
+			for(int row = 0; row < numOfRows;row++) {
+				for(int col = 0; col < numOfPins; col++) {
+					newChannel[row][col][z] = channel[row][col][z];
+				}
+			}
+		}
+		
+		return newChannel;
+	}
+	//returns num of rows without counting the first and the last row
 	public int getNumOfRows() {
 		return yind;
 	}
