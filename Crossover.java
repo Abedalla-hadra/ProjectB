@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.HashSet;
 public class Crossover {
+	static int layers = 2;
 	Integer[][][] parent1;
 	Integer[][][] parent2;
 	int numOfPins;
@@ -28,30 +29,33 @@ public class Crossover {
 		}
 		return randomNum;
 	}
-	private int transferRoutingWithinRange(Integer[][][] p,Integer[][][] subP,int startY,int startX,int pinNum
+	private int transferRoutingWithinRange(Integer[][][] p,Integer[][][] subP,int startY,int startX,int y,int x,int pinNum
 			,int minX,int maxX,int maxY,int z) {
-		if(startX > maxX || startX < minX || startY < 0 || startY > maxY) {
+		if(x > maxX || x < minX || y < 1 || y > maxY-1) {
 			return 0;		
 		}
-		if(p[startY][startX][z] == -pinNum && (startY == 0 || startY == maxY)) {
+		if((startY != y || x != startX) && p[y][x][z] == pinNum && y == 1 && p[0][x][z] == -pinNum ) {
 			return 1;
 		}
-		if(p[startY][startX][z] != pinNum) {
+		if((startY != y || x != startX) && p[y][x][z] == pinNum && y == maxY-1 && p[maxY][x][z] == -pinNum ) {
+			return 1;
+		}
+		if(p[y][x][z] != pinNum) {
 			return 0;
 		}
-		p[startY][startX][z] = -pinNum;
-		subP[startY][startX][z] = pinNum;
-		int res1 = transferRoutingWithinRange(p,subP,startY+1,startX,pinNum,minX,maxX,maxY,z);
-		int res2 = transferRoutingWithinRange(p,subP,startY-1,startX,pinNum,minX,maxX,maxY,z);
-		int res3 = transferRoutingWithinRange(p,subP,startY,startX+1,pinNum,minX,maxX,maxY,z);
-		int res4 = transferRoutingWithinRange(p,subP,startY,startX-1,pinNum,minX,maxX,maxY,z);
-		int res5 = transferRoutingWithinRange(p,subP,startY,startX,pinNum,minX,maxX,maxY,(z+1)%2);
+		p[y][x][z] = -pinNum;
+		subP[y][x][z] = pinNum;
+		int res1 = transferRoutingWithinRange(p,subP,startY,startX,y+1,x,pinNum,minX,maxX,maxY,z);
+		int res2 = transferRoutingWithinRange(p,subP,startY,startX,y-1,x,pinNum,minX,maxX,maxY,z);
+		int res3 = transferRoutingWithinRange(p,subP,startY,startX,y,x+1,pinNum,minX,maxX,maxY,z);
+		int res4 = transferRoutingWithinRange(p,subP,startY,startX,y,x-1,pinNum,minX,maxX,maxY,z);
+		int res5 = transferRoutingWithinRange(p,subP,startY,startX,y,x,pinNum,minX,maxX,maxY,(z+1)%2);
 		if(res1 == 1 || res2 == 1 || res3 == 1 || res4 == 1 || res5 == 1) {
-			p[startY][startX][z] = pinNum;
+			p[y][x][z] = pinNum;
 			return 1;
 		}
-		p[startY][startX][z] = pinNum;
-		subP[startY][startX][z] = 0;
+		p[y][x][z] = pinNum;
+		subP[y][x][z] = 0;
 
 		return 0;
 	}
@@ -66,14 +70,107 @@ public class Crossover {
 		updateSubP2(xc,subP2);
 		//printChannel(parent1,numOfRowsP1);
 		System.out.println(xc);
-		printChannel(subP1,numOfRowsP1);
+		//printChannel(subP1,numOfRowsP1);
 		subP1 = deleteUnoccupiedRows(subP1,numOfRowsP1);
 		subP2 = deleteUnoccupiedRows(subP2,numOfRowsP2);
 		int subP1NumRows = subP1.length;
 		int subP2NumRows = subP2.length;
-		printChannel(subP2,subP2.length);
+		if(subP1NumRows > subP2NumRows) {
+			for(int i = 0; i < subP1NumRows - subP2NumRows; i++ ) {
+				subP2 = addRowOnChannel(subP2,subP2NumRows);
+				subP2NumRows++;
+			}
+		}else if(subP2NumRows > subP1NumRows) {
+			for(int i = 0; i < subP2NumRows - subP1NumRows; i++ ) {
+				subP1 = addRowOnChannel(subP1,subP1NumRows);
+				subP1NumRows++;
+			}
+			
+		}
+		printChannel(subP1,subP1NumRows);
+		printChannel(subP2,subP2NumRows);
 		//printChannel(subP2,numOfRowsP2);
 
+	}
+	private Integer[][][] addRowOnChannel(Integer[][][] channel,int numOfRows) {
+		int y = numOfRows-2;
+		int yOfNewRow = randomNumInRange(1, y);
+		//System.out.println("new row index = "+yOfNewRow);
+		Integer[][][] newChannel = new Integer[numOfRows+1][this.numOfPins][layers];
+		numOfRows++;
+		for(int i = 0; i < numOfPins;i++) {
+			newChannel[0][i][0] = channel[0][i][0];
+			newChannel[0][i][1] = channel[0][i][1];
+			newChannel[numOfRows-1][i][0] = channel[numOfRows-2][i][0];
+			newChannel[numOfRows-1][i][1] = channel[numOfRows-2][i][1];
+		}
+		if(yOfNewRow == 1) {
+			for(int i = 0; i < numOfPins;i++) {
+				if(channel[yOfNewRow][i][0] == -channel[0][i][0]) {
+					newChannel[yOfNewRow][i][0] = channel[yOfNewRow][i][0];
+				}else {
+					newChannel[yOfNewRow][i][0] = 0;
+
+				}
+				if(channel[yOfNewRow][i][1] == -channel[0][i][1]) {
+					newChannel[yOfNewRow][i][1] = channel[yOfNewRow][i][1];
+				}else {
+					newChannel[yOfNewRow][i][1] = 0;
+				}
+			}
+			for(int row = yOfNewRow; row<numOfRows-2; row++) {
+				for(int col = 0; col<numOfPins; col++) {
+					newChannel[row+1][col][0] = channel[row][col][0];
+					newChannel[row+1][col][1] = channel[row][col][1];
+				}
+			}
+		}else if(yOfNewRow == numOfRows-3) {
+			for(int row = 1; row<=numOfRows-3; row++) {
+				for(int col = 0; col<numOfPins; col++) {
+					newChannel[row][col][0] = channel[row][col][0];
+					newChannel[row][col][1] = channel[row][col][1];
+				}
+			}
+			for(int i = 0; i < numOfPins;i++) {
+				if(channel[yOfNewRow][i][0] == -channel[numOfRows-2][i][0]) {
+					newChannel[yOfNewRow+1][i][0] = channel[yOfNewRow][i][0];
+				}else {
+					newChannel[yOfNewRow+1][i][0] = 0;
+				}
+				if(channel[yOfNewRow][i][1] == -channel[numOfRows-2][i][1]) {
+					newChannel[yOfNewRow+1][i][1] = channel[yOfNewRow][i][1];
+				}else {
+					newChannel[yOfNewRow+1][i][1] = 0;
+				}
+			}
+		}else {
+			for(int row = 1; row < yOfNewRow;row++) {
+				for(int col = 0; col < numOfPins; col++) {
+					newChannel[row][col][0] = channel[row][col][0];
+					newChannel[row][col][1] = channel[row][col][1];
+				}
+			}
+			for(int col = 0; col < numOfPins; col++) {
+				if(channel[yOfNewRow][col][0] !=0 && channel[yOfNewRow-1][col][0] == channel[yOfNewRow][col][0]) {
+					newChannel[yOfNewRow][col][0] = channel[yOfNewRow][col][0];
+				}else {
+					newChannel[yOfNewRow][col][0] = 0;
+				}
+				if(channel[yOfNewRow][col][1] !=0 && channel[yOfNewRow-1][col][1] == channel[yOfNewRow][col][1]) {
+					newChannel[yOfNewRow][col][1] = channel[yOfNewRow][col][1];
+				}else {
+					newChannel[yOfNewRow][col][1] = 0;
+				}
+			}
+			for(int row = yOfNewRow; row < numOfRows-2;row++) {
+				for(int col = 0; col < numOfPins; col++) {
+					newChannel[row+1][col][0] = channel[row][col][0];
+					newChannel[row+1][col][1] = channel[row][col][1];
+				}
+			}
+		}
+		return newChannel;
+		
 	}
 	private Integer[][][] deleteUnoccupiedRows(Integer[][][] sub,int numOfRows) {
 		
@@ -121,15 +218,15 @@ public class Crossover {
 	private void updateSubP1(int xc,Integer[][][] subP1) {
 		for(int i = 0; i <= xc; i++) {
 			if( parent1[1][i][0] !=0 && parent1[1][i][0] == -parent1[0][i][0]) {
-				transferRoutingWithinRange(parent1,subP1,1,i,parent1[1][i][0],0,xc,numOfRowsP1-1,0);
+				transferRoutingWithinRange(parent1,subP1,1,i,1,i,parent1[1][i][0],0,xc,numOfRowsP1-1,0);
 			}else {
-				transferRoutingWithinRange(parent1,subP1,1,i,parent1[1][i][1],0,xc,numOfRowsP1-1,1);
+				transferRoutingWithinRange(parent1,subP1,1,i,1,i,parent1[1][i][1],0,xc,numOfRowsP1-1,1);
 			}
 			
 			if( parent1[numOfRowsP1-2][i][0] !=0 && parent1[numOfRowsP1-2][i][0] == -parent1[numOfRowsP1-1][i][0]) {
-				transferRoutingWithinRange(parent1,subP1,numOfRowsP1-2,i,parent1[numOfRowsP1-2][i][0],0,xc,numOfRowsP1-1,0);
+				transferRoutingWithinRange(parent1,subP1,numOfRowsP1-2,i,numOfRowsP1-2,i,parent1[numOfRowsP1-2][i][0],0,xc,numOfRowsP1-1,0);
 			}else {
-				transferRoutingWithinRange(parent1,subP1,numOfRowsP1-2,i,parent1[numOfRowsP1-2][i][1],0,xc,numOfRowsP1-1,1);
+				transferRoutingWithinRange(parent1,subP1,numOfRowsP1-2,i,numOfRowsP1-2,i,parent1[numOfRowsP1-2][i][1],0,xc,numOfRowsP1-1,1);
 			}
 			
 		}
@@ -137,15 +234,15 @@ public class Crossover {
 	private void updateSubP2(int xc,Integer[][][] subP2) {
 		for(int i = xc+1; i < numOfPins; i++) {
 			if( parent2[1][i][0] !=0 && parent2[1][i][0] == -parent2[0][i][0]) {
-				transferRoutingWithinRange(parent2,subP2,1,i,parent2[1][i][0],xc+1,numOfPins-1,numOfRowsP2-1,0);
+				transferRoutingWithinRange(parent2,subP2,1,i,1,i,parent2[1][i][0],xc+1,numOfPins-1,numOfRowsP2-1,0);
 			}else {
-				transferRoutingWithinRange(parent2,subP2,1,i,parent2[1][i][1],xc+1,numOfPins-1,numOfRowsP2-1,1);
+				transferRoutingWithinRange(parent2,subP2,1,i,1,i,parent2[1][i][1],xc+1,numOfPins-1,numOfRowsP2-1,1);
 			}
 			
 			if( parent2[numOfRowsP2-2][i][0] !=0 && parent2[numOfRowsP2-2][i][0] == -parent2[numOfRowsP2-1][i][0]) {
-				transferRoutingWithinRange(parent2,subP2,numOfRowsP2-2,i,parent2[numOfRowsP2-2][i][0],xc+1,numOfPins-1,numOfRowsP2-1,0);
+				transferRoutingWithinRange(parent2,subP2,numOfRowsP2-2,i,numOfRowsP2-2,i,parent2[numOfRowsP2-2][i][0],xc+1,numOfPins-1,numOfRowsP2-1,0);
 			}else {
-				transferRoutingWithinRange(parent2,subP2,numOfRowsP2-2,i,parent2[numOfRowsP2-2][i][1],xc+1,numOfPins-1,numOfRowsP2-1,1);
+				transferRoutingWithinRange(parent2,subP2,numOfRowsP2-2,i,numOfRowsP2-2,i,parent2[numOfRowsP2-2][i][1],xc+1,numOfPins-1,numOfRowsP2-1,1);
 			}
 			
 		}
