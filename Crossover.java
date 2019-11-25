@@ -1,6 +1,7 @@
 package ProjectB;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.Random;
 import java.util.LinkedList; 
@@ -10,6 +11,8 @@ public class Crossover {
 	static int layers = 2;
 	Integer[][][] parent1;
 	Integer[][][] parent2;
+	Integer[][][] descendant;
+	int descendantRowsNum;
 	int numOfPins;
 	int numOfRowsP1;
 	int numOfRowsP2;
@@ -62,35 +65,114 @@ public class Crossover {
 	//return type should be Genotype, but for now it's void for testing
 	public void crossoverOp() {
 		int xc = randomNumInRange(0,numOfPins-2);
-		
 		Integer[][][] subP1 = new Integer[numOfRowsP1][numOfPins][2];
 		Integer[][][] subP2 = new Integer[numOfRowsP2][numOfPins][2];
 		initializeSubs(subP1,subP2);
 		updateSubP1(xc,subP1);
 		updateSubP2(xc,subP2);
-		//printChannel(parent1,numOfRowsP1);
 		System.out.println(xc);
-		//printChannel(subP1,numOfRowsP1);
 		subP1 = deleteUnoccupiedRows(subP1,numOfRowsP1);
 		subP2 = deleteUnoccupiedRows(subP2,numOfRowsP2);
 		int subP1NumRows = subP1.length;
 		int subP2NumRows = subP2.length;
 		if(subP1NumRows > subP2NumRows) {
-			for(int i = 0; i < subP1NumRows - subP2NumRows; i++ ) {
+			int n = subP1NumRows - subP2NumRows;
+			for(int i = 0; i < n; i++ ) {
 				subP2 = addRowOnChannel(subP2,subP2NumRows);
 				subP2NumRows++;
 			}
 		}else if(subP2NumRows > subP1NumRows) {
-			for(int i = 0; i < subP2NumRows - subP1NumRows; i++ ) {
+			int  n = subP2NumRows - subP1NumRows;
+			for(int i = 0; i < n; i++ ) {
 				subP1 = addRowOnChannel(subP1,subP1NumRows);
 				subP1NumRows++;
 			}
 			
 		}
-		printChannel(subP1,subP1NumRows);
-		printChannel(subP2,subP2NumRows);
-		//printChannel(subP2,numOfRowsP2);
+		descendantRowsNum = subP1NumRows;
+		descendant = new Integer[descendantRowsNum][numOfPins][layers];
+		initializeDescendant(descendant,subP1,subP2,xc,descendantRowsNum);
+		printChannel(descendant, descendantRowsNum);
+		ArrayList<Pin> pinsConnectedP1 = new ArrayList<Pin>();
+		ArrayList<Pin> pinsConnectedP2 = new ArrayList<Pin>();
+		ArrayList<Pin> pinsNotConnectedP1 = new ArrayList<Pin>();
+		ArrayList<Pin> pinsNotConnectedP2 = new ArrayList<Pin>();
+		for (int col = 0; col <= xc; col++) {
+			if (descendant[1][col][0] == -descendant[0][col][0] || descendant[1][col][1] == -descendant[0][col][1]) {
+				int pinNum = -descendant[0][col][0];
+				pinsConnectedP1.add(new Pin(pinNum, col, true));
+			} else {
+				int pinNum = -descendant[0][col][0];
+				pinsNotConnectedP1.add(new Pin(pinNum, col, true));
+			}
+			if (descendant[descendantRowsNum - 2][col][0] == -descendant[descendantRowsNum - 1][col][0] ||
+					     descendant[descendantRowsNum - 2][col][1] == -descendant[descendantRowsNum - 1][col][1]) {
+				int pinNum = -descendant[descendantRowsNum - 1][col][0];
+				pinsConnectedP1.add(new Pin(pinNum, col, false));
+			} else {
+				int pinNum = -descendant[descendantRowsNum - 1][col][0];
+				pinsNotConnectedP1.add(new Pin(pinNum, col, false));
+			}
+		}
+		for(int col = xc+1 ; col < numOfPins; col++ ) {
+			if(descendant[1][col][0] == -descendant[0][col][0] || descendant[1][col][1] == -descendant[0][col][1]  ) {
+				int pinNum = -descendant[0][col][0];
+				pinsConnectedP2.add(new Pin(pinNum,col,true));
+			}else {
+				int pinNum = -descendant[0][col][0];
+				pinsNotConnectedP2.add(new Pin(pinNum,col,true));
+			}
+			if (descendant[descendantRowsNum - 2][col][0] == -descendant[descendantRowsNum - 1][col][0] 
+					|| descendant[descendantRowsNum - 2][col][1] == -descendant[descendantRowsNum - 1][col][1]) {
+					int pinNum = -descendant[descendantRowsNum - 1][col][0];
+					pinsConnectedP2.add(new Pin(pinNum, col, false));
+			}else {
+				int pinNum = -descendant[descendantRowsNum - 1][col][0];
+				pinsNotConnectedP2.add(new Pin(pinNum, col, false));
+			}
+		}
+		Genotype desc = new Genotype(descendant,descendantRowsNum,numOfPins);
+		int res = desc.continueSolutionRandomly(pinsConnectedP1, pinsConnectedP2, pinsNotConnectedP1, pinsNotConnectedP2);
+		if(res == 1 ) {
+			System.out.println("Finished");
+			desc.printBoard();
+		}
+		/*
+		System.out.println("pinsConnectedP1");
+		for(Pin pin : pinsConnectedP1 ) {
+			System.out.print(pin.getIndex()+" "+pin.getPinNum()+" ");
+		}
+		System.out.println("\npinsNotConnectedP1");
+		for(Pin pin : pinsNotConnectedP1 ) {
+			System.out.print(pin.getIndex()+" "+pin.getPinNum()+" ");
+		}
+		System.out.println("\npinsConnectedP2");
+		for(Pin pin : pinsConnectedP2 ) {
+			System.out.print(pin.getIndex()+" "+pin.getPinNum()+" ");
+		}
+		System.out.println("\npinsNotConnectedP2");
+		for(Pin pin : pinsNotConnectedP2 ) {
+			System.out.print(pin.getIndex()+" "+pin.getPinNum()+" ");
+		}*/
 
+	}
+
+	private void initializeDescendant(Integer[][][] descendant,Integer[][][] subP1,Integer[][][] subP2,int xc,int numOfRows) {
+		for(int  z = 0 ; z < layers ;z++) {
+			for(int row = 0 ; row < numOfRows; row++) {
+				for(int col = 0; col <= xc ; col++) {
+					descendant[row][col][z] = subP1[row][col][z];
+				}
+			}
+		}
+		for(int  z = 0 ; z < layers ;z++) {
+			for(int row = 0 ; row < numOfRows; row++) {
+				for(int col = xc+1; col < numOfPins ; col++) {
+					descendant[row][col][z] = subP2[row][col][z];
+				}
+			}
+		}
+		
 	}
 	private Integer[][][] addRowOnChannel(Integer[][][] channel,int numOfRows) {
 		int y = numOfRows-2;

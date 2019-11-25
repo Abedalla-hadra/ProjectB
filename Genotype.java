@@ -2,6 +2,7 @@ package ProjectB;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.Random;
 import java.util.LinkedList; 
@@ -56,7 +57,7 @@ public class Genotype {
 	public Genotype(Integer[][][] _channel,int _numOfRows,int _numOfPins) {
 		this.numOfRows = _numOfRows;
 		this.yind = _numOfRows - 2;
-		this.maxExtension = 10;
+		this.maxExtension = _numOfRows+4;
 		this.numOfPins = _numOfPins;
 		this.F1 = -1;
 		this.F2 = -1;
@@ -69,8 +70,6 @@ public class Genotype {
 				}
 			}
 		}
-		calcF1();
-		calcF2();
 	}
 	public int getNumOfPins() {
 		return numOfPins;
@@ -84,6 +83,258 @@ public class Genotype {
 				}
 			}
 		}
+	}
+	
+	public int continueSolutionRandomly(ArrayList<Pin> pinsConnectedP1,ArrayList<Pin> pinsConnectedP2,
+			ArrayList<Pin> pinsNotConnectedP1,ArrayList<Pin> pinsNotConnectedP2) {
+		HashMap<Integer,ArrayList<Pin>> netsInP1 = new HashMap<Integer,ArrayList<Pin>>();
+		HashMap<Integer,ArrayList<Pin>> netsInP2 = new HashMap<Integer,ArrayList<Pin>>();
+		ArrayList<Pin> needToBeConnectedInP1 = new ArrayList<Pin>();
+		ArrayList<Pin> needToBeConnectedInP2 = new ArrayList<Pin>();
+
+		for(Pin pin : pinsConnectedP1 ) {
+			int pinNum = pin.getPinNum();
+			if(netsInP1.containsKey(pinNum)) {
+				netsInP1.get(pinNum).add(pin);
+			}else {
+				netsInP1.put(pinNum,new ArrayList<Pin>());
+				netsInP1.get(pinNum).add(pin);
+			}
+		}
+		for(Pin pin : pinsNotConnectedP1 ) {
+			int pinNum = pin.getPinNum();
+			if(netsInP1.containsKey(pinNum)) {
+				netsInP1.get(pinNum).add(pin);
+			}else {
+				netsInP1.put(pinNum,new ArrayList<Pin>());
+				netsInP1.get(pinNum).add(pin);
+			}
+		}
+		for(Pin pin : pinsConnectedP2 ) {
+			int pinNum = pin.getPinNum();
+			if(netsInP2.containsKey(pinNum)) {
+				netsInP2.get(pinNum).add(pin);
+			}else {
+				netsInP2.put(pinNum,new ArrayList<Pin>());
+				netsInP2.get(pinNum).add(pin);
+			}
+		}
+		for(Pin pin : pinsNotConnectedP2 ) {
+			int pinNum = pin.getPinNum();
+			if(netsInP2.containsKey(pinNum)) {
+				netsInP2.get(pinNum).add(pin);
+			}else {
+				netsInP2.put(pinNum,new ArrayList<Pin>());
+				netsInP2.get(pinNum).add(pin);
+			}
+		}
+		Random randomGenerator = new Random();
+		int numOfExtension = 0;
+		while (!pinsNotConnectedP1.isEmpty()) {
+			int randomInt = randomGenerator.nextInt(pinsNotConnectedP1.size());
+			Pin s = pinsNotConnectedP1.get(randomInt);
+			Pin t;
+			pinsNotConnectedP1.remove(randomInt);
+			ArrayList<Integer> pinsOfTheSameNet = new ArrayList<>();
+			if (pinsConnectedP1.isEmpty()) {
+				for (int i = 0; i < pinsNotConnectedP1.size(); i++) {
+					Pin temp = pinsNotConnectedP1.get(i);
+					if (temp.getPinNum() == s.getPinNum()) {
+						pinsOfTheSameNet.add(i);
+					}
+				}
+				if(pinsOfTheSameNet.isEmpty()) {
+					needToBeConnectedInP1.add(s);
+					continue;
+				}
+				randomInt = randomGenerator.nextInt(pinsOfTheSameNet.size());
+				t = pinsNotConnectedP1.get(pinsOfTheSameNet.get(randomInt));
+				pinsConnectedP1.add(t);
+				int x = pinsOfTheSameNet.get(randomInt);
+				pinsNotConnectedP1.remove(x);
+
+			} else {
+				for (int i = 0; i < pinsConnectedP1.size(); i++) {
+					Pin temp = pinsConnectedP1.get(i);
+					if (temp.getPinNum() == s.getPinNum()) {
+						pinsOfTheSameNet.add(i);
+					}
+				}
+				if (pinsOfTheSameNet.isEmpty()) {
+					for (int i = 0; i < pinsNotConnectedP1.size(); i++) {
+						Pin temp = pinsNotConnectedP1.get(i);
+						if (temp.getPinNum() == s.getPinNum()) {
+							pinsOfTheSameNet.add(i);
+						}
+					}
+					if(pinsOfTheSameNet.isEmpty()) {
+						needToBeConnectedInP1.add(s);
+						continue;
+					}
+					randomInt = randomGenerator.nextInt(pinsOfTheSameNet.size());
+					t = pinsNotConnectedP1.get(pinsOfTheSameNet.get(randomInt));
+					pinsConnectedP1.add(t);
+					int x = pinsOfTheSameNet.get(randomInt);
+					pinsNotConnectedP1.remove(x);
+				} else {
+					randomInt = randomGenerator.nextInt(pinsOfTheSameNet.size());
+					t = pinsConnectedP1.get(pinsOfTheSameNet.get(randomInt));
+					//pinsConnectedP1.add(t);
+				}
+			}
+			pinsConnectedP1.add(s);
+			boolean isPinsConnected = false;
+			while(numOfExtension < maxExtension && !isPinsConnected) {
+				isPinsConnected = (connectPins(s,t) == 1)? true:false;
+				if(!isPinsConnected) {
+					addRowOnChannel();
+					numOfExtension++;
+				}
+			}
+			if(!isPinsConnected) {
+				return 0;
+			}
+		}
+		while (!pinsNotConnectedP2.isEmpty()) {
+			int randomInt = randomGenerator.nextInt(pinsNotConnectedP2.size());
+			Pin s = pinsNotConnectedP2.get(randomInt);
+			Pin t;
+			pinsNotConnectedP2.remove(randomInt);
+			ArrayList<Integer> pinsOfTheSameNet = new ArrayList<>();
+			if (pinsConnectedP2.isEmpty()) {
+				for (int i = 0; i < pinsNotConnectedP2.size(); i++) {
+					Pin temp = pinsNotConnectedP2.get(i);
+					if (temp.getPinNum() == s.getPinNum()) {
+						pinsOfTheSameNet.add(i);
+					}
+				}
+				if(pinsOfTheSameNet.isEmpty()) {
+					needToBeConnectedInP2.add(s);
+					continue;
+				}
+				randomInt = randomGenerator.nextInt(pinsOfTheSameNet.size());
+				t = pinsNotConnectedP2.get(pinsOfTheSameNet.get(randomInt));
+				pinsConnectedP2.add(t);
+				int x = pinsOfTheSameNet.get(randomInt);
+				pinsNotConnectedP2.remove(x);
+
+			} else {
+				for (int i = 0; i < pinsConnectedP2.size(); i++) {
+					Pin temp = pinsConnectedP2.get(i);
+					if (temp.getPinNum() == s.getPinNum()) {
+						pinsOfTheSameNet.add(i);
+					}
+				}
+				if (pinsOfTheSameNet.isEmpty()) {
+					for (int i = 0; i < pinsNotConnectedP2.size(); i++) {
+						Pin temp = pinsNotConnectedP2.get(i);
+						if (temp.getPinNum() == s.getPinNum()) {
+							pinsOfTheSameNet.add(i);
+						}
+					}
+					if(pinsOfTheSameNet.isEmpty()) {
+						needToBeConnectedInP2.add(s);
+						continue;
+					}
+					randomInt = randomGenerator.nextInt(pinsOfTheSameNet.size());
+					t = pinsNotConnectedP2.get(pinsOfTheSameNet.get(randomInt));
+					pinsConnectedP2.add(t);
+					int x = pinsOfTheSameNet.get(randomInt);
+					pinsNotConnectedP2.remove(x);
+				} else {
+					randomInt = randomGenerator.nextInt(pinsOfTheSameNet.size());
+					t = pinsConnectedP2.get(pinsOfTheSameNet.get(randomInt));
+					//pinsConnectedP2.add(t);
+				}
+			}
+			pinsConnectedP2.add(s);
+			boolean isPinsConnected = false;
+			while(numOfExtension < maxExtension && !isPinsConnected) {
+				isPinsConnected = (connectPins(s,t) == 1)? true:false;
+				if(!isPinsConnected) {
+					addRowOnChannel();
+					numOfExtension++;
+				}
+			}
+			if(!isPinsConnected) {
+				return 0;
+			}
+		}
+		while(!needToBeConnectedInP1.isEmpty()) {
+			Pin s = needToBeConnectedInP1.get(0);
+			needToBeConnectedInP1.remove(0);
+			Pin t = null;
+			for(Pin p : needToBeConnectedInP2) {
+				if(p.getPinNum() == s.getPinNum()) {
+					t = p;
+					pinsConnectedP2.add(t);
+					needToBeConnectedInP2.remove(p);
+					break;
+				}
+			}
+			if(t == null) {
+				ArrayList<Integer> pinsOfTheSameNet = new ArrayList<Integer>();
+				int randomInt;
+				for (int i = 0; i < pinsConnectedP2.size(); i++) {
+					Pin temp = pinsConnectedP2.get(i);
+					if (temp.getPinNum() == s.getPinNum()) {
+						pinsOfTheSameNet.add(i);
+					}
+				}
+				pinsConnectedP1.add(s);
+				randomInt = randomGenerator.nextInt(pinsOfTheSameNet.size());
+				t = pinsConnectedP2.get(pinsOfTheSameNet.get(randomInt));
+			}
+			boolean isPinsConnected = false;
+			while(numOfExtension < maxExtension && !isPinsConnected) {
+				isPinsConnected = (connectPins(s,t) == 1)? true:false;
+				if(!isPinsConnected) {
+					addRowOnChannel();
+					numOfExtension++;
+				}
+			}
+			if(!isPinsConnected) {
+				return 0;
+			}
+		}
+		while(!needToBeConnectedInP2.isEmpty()) {
+			Pin s = needToBeConnectedInP2.get(0);
+			needToBeConnectedInP2.remove(0);
+			Pin t = null;
+			for(Pin p : needToBeConnectedInP1) {
+				if(p.getPinNum() == s.getPinNum()) {
+					t = p;
+					pinsConnectedP1.add(t);
+					needToBeConnectedInP1.remove(p);
+					break;
+				}
+			}
+			if(t == null) {
+				ArrayList<Integer> pinsOfTheSameNet = new ArrayList<Integer>();
+				int randomInt;
+				for (int i = 0; i < pinsConnectedP1.size(); i++) {
+					Pin temp = pinsConnectedP1.get(i);
+					if (temp.getPinNum() == s.getPinNum()) {
+						pinsOfTheSameNet.add(i);
+					}
+				}
+				randomInt = randomGenerator.nextInt(pinsOfTheSameNet.size());
+				t = pinsConnectedP1.get(pinsOfTheSameNet.get(randomInt));
+			}
+			pinsConnectedP2.add(s);
+			boolean isPinsConnected = false;
+			while(numOfExtension < maxExtension && !isPinsConnected) {
+				isPinsConnected = (connectPins(s,t) == 1)? true:false;
+				if(!isPinsConnected) {
+					addRowOnChannel();
+					numOfExtension++;
+				}
+			}
+			if(!isPinsConnected) {
+				return 0;
+			}
+		}
+		return 1;
 	}
 	public void setFitness(double _fitness) {
 		fitness = _fitness;
@@ -889,6 +1140,7 @@ public class Genotype {
 	}
 	public int randomSolution() {
 		Random randomGenerator = new Random();
+		int numOfExtension = 0;
 		while (!S.isEmpty()) {
 			int randomInt = randomGenerator.nextInt(S.size());
 			Pin s = S.get(randomInt);
@@ -934,7 +1186,6 @@ public class Genotype {
 				}
 			}
 			T.add(s);
-			int numOfExtension = 0;
 			boolean isPinsConnected = false;
 			while(numOfExtension < maxExtension && !isPinsConnected) {
 				isPinsConnected = (connectPins(s,t) == 1)? true:false;
