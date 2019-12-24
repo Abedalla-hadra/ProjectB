@@ -334,6 +334,7 @@ public class Genotype {
 				return 0;
 			}
 		}
+		deleteUnoccupiedRows();
 		return 1;
 	}
 	public void setFitness(double _fitness) {
@@ -354,6 +355,81 @@ public class Genotype {
 		
 		return newChannel;
 	}
+	private void deleteUnoccupiedRows() {
+		ArrayList<Integer> rowsToKeep = new ArrayList<Integer>();
+		for (int row = 1; row < numOfRows - 1; row++) {
+			int firstLayerLastX = channel[row][0][0];
+			int secondLayerLastX = channel[row][0][1];
+			boolean rowAdded = false;
+			for (int col = 1; col < numOfPins && !rowAdded; col++) {
+				if (firstLayerLastX != 0 && channel[row][col][0] == firstLayerLastX) {
+					rowsToKeep.add(row);
+					rowAdded = true;
+				} else if (secondLayerLastX != 0 && channel[row][col][1] == secondLayerLastX) {
+					rowsToKeep.add(row);
+					rowAdded = true;
+				} else if (channel[row][col][0] != 0 && channel[row][col][0] == channel[row][col][1]) {
+					rowsToKeep.add(row);
+					rowAdded = true;
+				}
+				firstLayerLastX = channel[row][col][0];
+				secondLayerLastX = channel[row][col][1];
+			}
+
+		}
+		int newRowsNum = rowsToKeep.size()+2;
+		Integer[][][] newSub = new Integer[newRowsNum][numOfPins][2];
+		for(int col = 0 ; col < numOfPins; col++) {
+			newSub[0][col][0] = channel[0][col][0];
+			newSub[0][col][1] = channel[0][col][1];
+			newSub[newRowsNum-1][col][0] = channel[numOfRows-1][col][0];
+			newSub[newRowsNum-1][col][1] = channel[numOfRows-1][col][1];
+		}
+		for (int row = 1; row < newRowsNum - 1; row++) {
+			int rowToCopy = rowsToKeep.get(row - 1);
+			for (int col = 0; col < numOfPins; col++) {
+				newSub[row][col][0] = channel[rowToCopy][col][0];
+				newSub[row][col][1] = channel[rowToCopy][col][1];
+			}
+		}
+		//clean up unneeded vias
+		for(int col = 0; col < numOfPins; col++) {
+			if(newSub[1][col][0] != 0 && newSub[1][col][0] == newSub[1][col][1]) {
+				if(col > 0 && newSub[1][col-1][0] == newSub[1][col][0]) {
+					newSub[1][col][1] = 0;
+				}else if(col + 1 < numOfPins && newSub[1][col+1][0] == newSub[1][col][0]) {
+					newSub[1][col][1] = 0;
+				}else if(newSub[2][col][0] == newSub[1][col][0]) {
+					newSub[1][col][1] = 0;
+				}else if(col > 0 && newSub[1][col-1][1] == newSub[1][col][1]) {
+					newSub[1][col][0] = 0;
+				}else if(col + 1 < numOfPins && newSub[1][col+1][1] == newSub[1][col][1]) {
+					newSub[1][col][0] = 0;
+				}else if(newSub[2][col][1] == newSub[1][col][1]) {
+					newSub[1][col][0] = 0;
+				}
+			}
+			if(newSub[newRowsNum-2][col][0] != 0 && newSub[newRowsNum-2][col][0] == newSub[newRowsNum-2][col][1]) {
+				if(col > 0 && newSub[newRowsNum-2][col-1][0] == newSub[newRowsNum-2][col][0]) {
+					newSub[newRowsNum-2][col][1] = 0;
+				}else if(col + 1 < numOfPins && newSub[newRowsNum-2][col+1][0] == newSub[newRowsNum-2][col][0]) {
+					newSub[newRowsNum-2][col][1] = 0;
+				}else if(newSub[newRowsNum-3][col][0] == newSub[newRowsNum-2][col][0]) {
+					newSub[newRowsNum-2][col][1] = 0;
+				}else if(col > 0 && newSub[newRowsNum-2][col-1][1] == newSub[newRowsNum-2][col][1]) {
+					newSub[newRowsNum-2][col][0] = 0;
+				}else if(col + 1 < numOfPins && newSub[newRowsNum-2][col+1][1] == newSub[newRowsNum-2][col][1]) {
+					newSub[newRowsNum-2][col][0] = 0;
+				}else if(newSub[newRowsNum-3][col][1] == newSub[newRowsNum-2][col][1]) {
+					newSub[newRowsNum-2][col][0] = 0;
+				}
+			}
+		}
+		numOfRows = newRowsNum;
+		yind = newRowsNum-2;
+		channel = newSub;
+	}
+	
 	//returns num of rows without counting the first and the last row
 	public int getNumOfRows() {
 		return yind;

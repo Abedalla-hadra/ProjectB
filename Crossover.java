@@ -63,14 +63,13 @@ public class Crossover {
 		return 0;
 	}
 	//return type should be Genotype, but for now it's void for testing
-	public void crossoverOp() {
+	public Genotype crossoverOp() {
 		int xc = randomNumInRange(0,numOfPins-2);
 		Integer[][][] subP1 = new Integer[numOfRowsP1][numOfPins][2];
 		Integer[][][] subP2 = new Integer[numOfRowsP2][numOfPins][2];
 		initializeSubs(subP1,subP2);
 		updateSubP1(xc,subP1);
 		updateSubP2(xc,subP2);
-		System.out.println(xc);
 		subP1 = deleteUnoccupiedRows(subP1,numOfRowsP1);
 		subP2 = deleteUnoccupiedRows(subP2,numOfRowsP2);
 		int subP1NumRows = subP1.length;
@@ -92,7 +91,6 @@ public class Crossover {
 		descendantRowsNum = subP1NumRows;
 		descendant = new Integer[descendantRowsNum][numOfPins][layers];
 		initializeDescendant(descendant,subP1,subP2,xc,descendantRowsNum);
-		printChannel(descendant, descendantRowsNum);
 		ArrayList<Pin> pinsConnectedP1 = new ArrayList<Pin>();
 		ArrayList<Pin> pinsConnectedP2 = new ArrayList<Pin>();
 		ArrayList<Pin> pinsNotConnectedP1 = new ArrayList<Pin>();
@@ -134,27 +132,9 @@ public class Crossover {
 		Genotype desc = new Genotype(descendant,descendantRowsNum,numOfPins);
 		int res = desc.continueSolutionRandomly(pinsConnectedP1, pinsConnectedP2, pinsNotConnectedP1, pinsNotConnectedP2);
 		if(res == 1 ) {
-			System.out.println("Finished");
-			desc.printBoard();
+			return desc;
 		}
-		/*
-		System.out.println("pinsConnectedP1");
-		for(Pin pin : pinsConnectedP1 ) {
-			System.out.print(pin.getIndex()+" "+pin.getPinNum()+" ");
-		}
-		System.out.println("\npinsNotConnectedP1");
-		for(Pin pin : pinsNotConnectedP1 ) {
-			System.out.print(pin.getIndex()+" "+pin.getPinNum()+" ");
-		}
-		System.out.println("\npinsConnectedP2");
-		for(Pin pin : pinsConnectedP2 ) {
-			System.out.print(pin.getIndex()+" "+pin.getPinNum()+" ");
-		}
-		System.out.println("\npinsNotConnectedP2");
-		for(Pin pin : pinsNotConnectedP2 ) {
-			System.out.print(pin.getIndex()+" "+pin.getPinNum()+" ");
-		}*/
-
+		return null;
 	}
 
 	private void initializeDescendant(Integer[][][] descendant,Integer[][][] subP1,Integer[][][] subP2,int xc,int numOfRows) {
@@ -388,7 +368,10 @@ public class Crossover {
 
 		}
 		Crossover cross = new Crossover(channels.get(0),channels.get(1));
-		cross.crossoverOp();
+		Genotype desc = cross.crossoverOp();
+		if(desc != null) {
+			desc.printBoard();
+		}
 	
 	}
 
