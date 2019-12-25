@@ -84,6 +84,162 @@ public class Genotype {
 			}
 		}
 	}
+	private Genotype mutation1() {
+		if(numOfPins <= 2 || numOfRows <=4) {
+			return null;
+		}
+		int centerPointX = randomNumInRange(1, numOfPins-2);
+		int centerPointY = randomNumInRange(2, numOfRows-3);
+		int centerPointZ = randomNumInRange(0, 1);
+		int height = randomNumInRange(1, Math.min(centerPointY-1, numOfRows-2-centerPointY));
+		int width = randomNumInRange(1, Math.min(centerPointX, numOfPins-1-centerPointX));
+		System.out.println("centerPointX="+centerPointX+"centerPointY= "+centerPointY);
+		System.out.println("height="+height+"width= "+width);
+		Integer[][][] tempChannel = new Integer[this.numOfRows][this.numOfPins][layers];
+		copyChannel(tempChannel);
+		for(int row = centerPointY-height; row <= centerPointY+height; row++) {
+			for(int col = centerPointX-width; col <= centerPointX+width; col++) {
+				tempChannel[row][col][centerPointZ] = 0;
+			}
+		}
+		Genotype genotypeCopy = new Genotype(tempChannel, numOfRows, numOfPins);
+		genotypeCopy.maxExtension = 10;
+		genotypeCopy.printBoard();
+		if(genotypeCopy.connectUnconnectedPins() == 1) {
+			return genotypeCopy;
+		}
+		return null;
+	}
+	private int isPinConnected(Integer[][][] p,int startRow, int startCol, int row, int col, int pinNum, int z) {
+		if(col >= numOfPins || col < 0 || row < 1 || row > numOfRows-2) {
+			return 0;
+		}
+		if((startRow != row || col != startCol) && p[row][col][z] == pinNum && row == 1 && p[0][col][z] == -pinNum ) {
+			return 1;
+		}
+		if((startRow != row || col != startCol) && p[row][col][z] == pinNum && row == numOfRows-2 && p[numOfRows-1][col][z] == -pinNum ) {
+			return 1;
+		}
+		if(p[row][col][z] != pinNum) {
+			return 0;
+		}
+		p[row][col][z] = -pinNum;
+		if (isPinConnected(p, startRow, startCol, row + 1, col, pinNum, z) == 1
+				|| isPinConnected(p, startRow, startCol, row - 1, col, pinNum, z) == 1
+				|| isPinConnected(p, startRow, startCol, row, col + 1, pinNum, z) == 1
+				|| isPinConnected(p, startRow, startCol, row, col - 1, pinNum, z) == 1
+				|| isPinConnected(p, startRow, startCol, row, col, pinNum, (z + 1) % 2) == 1) {
+			p[row][col][z] = pinNum;
+			return 1;
+		}
+		p[row][col][z] = pinNum;
+		return 0;
+	}
+	private int connectUnconnectedPins() {
+		ArrayList<Pin> notConnectedPins = new ArrayList<Pin>();
+		ArrayList<Pin> connectedPins = new ArrayList<Pin>();
+		for(int col = 0; col < numOfPins; col++) {
+			int pinNum = -1*channel[0][col][0];
+			if(channel[1][col][0] == pinNum) {
+				if(isPinConnected(channel, 1, col, 1, col, pinNum, 0) == 1) {
+					connectedPins.add(new Pin(pinNum, col, true));
+				}else {
+					notConnectedPins.add(new Pin(pinNum, col, true));
+				}
+			}else if(channel[1][col][1] == pinNum) {
+				if(isPinConnected(channel, 1, col, 1, col, pinNum, 1) == 1) {
+					connectedPins.add(new Pin(pinNum, col, true));
+				}else {
+					notConnectedPins.add(new Pin(pinNum, col, true));
+				}
+			}else {
+				notConnectedPins.add(new Pin(pinNum, col, true));
+			}
+			
+			pinNum = -1*channel[numOfRows-1][col][0];
+			if(channel[numOfRows-2][col][0] == pinNum) {
+				if(isPinConnected(channel, numOfRows-2, col, numOfRows-2, col, pinNum, 0) == 1) {
+					connectedPins.add(new Pin(pinNum, col, false));
+				}else {
+					notConnectedPins.add(new Pin(pinNum, col, false));
+				}
+			}else if(channel[numOfRows-2][col][1] == pinNum) {
+				if(isPinConnected(channel, numOfRows-2, col, numOfRows-2, col, pinNum, 1) == 1) {
+					connectedPins.add(new Pin(pinNum, col, false));
+				}else {
+					notConnectedPins.add(new Pin(pinNum, col, false));
+				}
+			}else {
+				notConnectedPins.add(new Pin(pinNum, col, false));
+			}
+			
+		}
+		System.out.println(connectedPins.size());
+		Random randomGenerator = new Random();
+		int numOfExtension = 0;
+		while (!notConnectedPins.isEmpty()) {
+			int randomInt = randomGenerator.nextInt(notConnectedPins.size());
+			Pin s = notConnectedPins.get(randomInt);
+			Pin t;
+			notConnectedPins.remove(randomInt);
+			ArrayList<Integer> pinsOfTheSameNet = new ArrayList<>();
+			if (connectedPins.isEmpty()) {
+				for (int i = 0; i < notConnectedPins.size(); i++) {
+					Pin temp = notConnectedPins.get(i);
+					if (temp.getPinNum() == s.getPinNum()) {
+						pinsOfTheSameNet.add(i);
+					}
+				}
+				randomInt = randomGenerator.nextInt(pinsOfTheSameNet.size());
+				t = notConnectedPins.get(pinsOfTheSameNet.get(randomInt));
+				connectedPins.add(t);
+				int x = pinsOfTheSameNet.get(randomInt);
+				notConnectedPins.remove(x);
+
+			} else {
+				for (int i = 0; i < connectedPins.size(); i++) {
+					Pin temp = connectedPins.get(i);
+					if (temp.getPinNum() == s.getPinNum()) {
+						pinsOfTheSameNet.add(i);
+					}
+				}
+				if (pinsOfTheSameNet.isEmpty()) {
+					for (int i = 0; i < notConnectedPins.size(); i++) {
+						Pin temp = notConnectedPins.get(i);
+						if (temp.getPinNum() == s.getPinNum()) {
+							pinsOfTheSameNet.add(i);
+						}
+					}
+					randomInt = randomGenerator.nextInt(pinsOfTheSameNet.size());
+					t = notConnectedPins.get(pinsOfTheSameNet.get(randomInt));
+					connectedPins.add(t);
+					int x = pinsOfTheSameNet.get(randomInt);
+					notConnectedPins.remove(x);
+				} else {
+					randomInt = randomGenerator.nextInt(pinsOfTheSameNet.size());
+					t = connectedPins.get(pinsOfTheSameNet.get(randomInt));
+					connectedPins.add(t);
+				}
+			}
+			connectedPins.add(s);
+			boolean isPinsConnected = false;
+			while(numOfExtension < maxExtension && !isPinsConnected) {
+				isPinsConnected = (connectPins(s,t) == 1)? true:false;
+				if(!isPinsConnected) {
+					addRowOnChannel();
+					numOfExtension++;
+				}
+			}
+			if(!isPinsConnected) {
+				return 0;
+			}
+			//System.out.print("pin s "+s.getPinNum()+" "+s.getIndex()+" pin t "+t.getPinNum()+" "+t.getIndex()+"\n");
+		}
+		calcF1();
+		calcF2();
+		
+		return 1;
+	}
 	
 	public int continueSolutionRandomly(ArrayList<Pin> pinsConnectedP1,ArrayList<Pin> pinsConnectedP2,
 			ArrayList<Pin> pinsNotConnectedP1,ArrayList<Pin> pinsNotConnectedP2) {
@@ -1343,6 +1499,10 @@ public class Genotype {
 			s.printBoard();
 			System.out.println("F1: "+s.getF1());
 			System.out.println("F2: "+s.getF2());
+			Genotype x = s.mutation1();
+			if(x != null) {
+				x.printBoard();
+			}
 		}else {
 			System.out.println("no solution");
 		}
