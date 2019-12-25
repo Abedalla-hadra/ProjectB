@@ -5,12 +5,15 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.Random;
+import java.util.Set;
 import java.util.LinkedList; 
 import java.util.Queue;
 import java.util.HashSet;
 enum Direction {
 	UP, DOWN, LEFT, RIGHT
 }
+enum mutations {NO_MUTATIION,MUTATION3,MUTATION4,MUTATION2,MUTATION1}
+
 public class Genotype {
 	static int layers = 2;
 	int numOfPins;
@@ -84,6 +87,83 @@ public class Genotype {
 			}
 		}
 	}
+	private mutations indexToMutationsEnum(int index) {
+		mutations res = mutations.NO_MUTATIION;
+		switch(index) {
+		case 0: 
+			res = mutations.NO_MUTATIION;
+			break;
+		case 1:
+			res = mutations.MUTATION3;
+			break;
+		case 2:
+			res = mutations.MUTATION4;
+			break;
+		case 3:
+			res = mutations.MUTATION2;
+			break;
+		case 4:
+			res = mutations.MUTATION1;
+			break;
+		}
+			
+		return res;
+	}
+	public void mutationOperator() {
+		ArrayList<Double> probs = new ArrayList<Double>();
+		double mut1Prob = 0.001;
+		double mut2Prob = 0.002;
+		double mut3Prob = 0.01;
+		double mut4Prob = 0.01;
+		double noMutProb = 1 - mut1Prob - mut2Prob - mut3Prob - mut4Prob;
+		probs.add(noMutProb);
+		probs.add(mut3Prob);
+		probs.add(mut4Prob);
+		probs.add(mut2Prob);
+		probs.add(mut1Prob);
+		DiscreteDistribution distribution = new DiscreteDistribution(probs);
+		int randOperator = distribution.randomSample();
+		Genotype channelAfterMutation = null;
+		mutations res = indexToMutationsEnum(randOperator);
+		int maxNumOfIterations = 30;
+		if(res == mutations.NO_MUTATIION) {
+			return;
+		}else if(res == mutations.MUTATION3) {
+			int numOfIteration = 0;
+			while(numOfIteration < maxNumOfIterations && channelAfterMutation == null) {
+				channelAfterMutation = mutation3();
+				numOfIteration++;
+			}
+		}else if(res == mutations.MUTATION4) {
+			int numOfIteration = 0;
+			while(numOfIteration < maxNumOfIterations && channelAfterMutation == null) {
+				channelAfterMutation = mutation4();
+				numOfIteration++;
+			}
+		}else if(res == mutations.MUTATION2) {
+			int numOfIteration = 0;
+			while(numOfIteration < maxNumOfIterations && channelAfterMutation == null) {
+				channelAfterMutation = mutation2();
+				numOfIteration++;
+			}
+		}else if(res == mutations.MUTATION1) {
+			int numOfIteration = 0;
+			while(numOfIteration < maxNumOfIterations && channelAfterMutation == null) {
+				channelAfterMutation = mutation1();
+				numOfIteration++;
+			}
+		}
+		if (channelAfterMutation != null)
+		{
+			this.channel = channelAfterMutation.channel;
+			this.numOfRows = channelAfterMutation.numOfRows;
+			this.numOfPins = channelAfterMutation.numOfPins;
+			this.yind = this.numOfRows - 2;
+			this.F1 = channelAfterMutation.F1;
+			this.F2 = channelAfterMutation.F2;
+		}
+
+	}
 	private Genotype mutation1() {
 		if(numOfPins <= 2 || numOfRows <=4) {
 			return null;
@@ -93,8 +173,6 @@ public class Genotype {
 		int centerPointZ = randomNumInRange(0, 1);
 		int height = randomNumInRange(1, Math.min(centerPointY-1, numOfRows-2-centerPointY));
 		int width = randomNumInRange(1, Math.min(centerPointX, numOfPins-1-centerPointX));
-		System.out.println("centerPointX="+centerPointX+"centerPointY= "+centerPointY);
-		System.out.println("height="+height+"width= "+width);
 		Integer[][][] tempChannel = new Integer[this.numOfRows][this.numOfPins][layers];
 		copyChannel(tempChannel);
 		for(int row = centerPointY-height; row <= centerPointY+height; row++) {
@@ -104,7 +182,96 @@ public class Genotype {
 		}
 		Genotype genotypeCopy = new Genotype(tempChannel, numOfRows, numOfPins);
 		genotypeCopy.maxExtension = 10;
+		if(genotypeCopy.connectUnconnectedPins() == 1) {
+			return genotypeCopy;
+		}
+		return null;
+	}
+	private Genotype mutation2() {
+		Set<Integer> set = new HashSet<Integer>();
+		ArrayList<Integer> nets = new ArrayList<Integer>();
+		Set<Integer> netsToRemove = new HashSet<Integer>();
+		for(int col = 0; col < numOfPins; col++) {
+			if(!set.contains(-channel[0][col][0])) {
+				set.add(-channel[0][col][0]);
+				nets.add(-channel[0][col][0]);
+			}	
+		}
+        Random rand = new Random(); 
+        int numOfNetsToRemove = randomNumInRange(1, set.size()-1);
+        System.out.println("net size "+set.size());
+        System.out.println("numOfNetsToRemove "+numOfNetsToRemove);
+        for(int i = 0; i < numOfNetsToRemove; i++) {
+        	int index = rand.nextInt(nets.size());
+        	netsToRemove.add(nets.get(index));
+        	nets.remove(index);
+        }
+        Integer[][][] tempChannel = new Integer[this.numOfRows][this.numOfPins][layers];
+		copyChannel(tempChannel);
+		for(int col = 0; col < numOfPins; col++) {
+			int pinNum = -tempChannel[0][col][0];
+			if(netsToRemove.contains(pinNum)) {
+				if(tempChannel[1][col][0] == pinNum) {
+					if(isPinConnected(tempChannel, 1, col, 1, col, pinNum, 0) == 1) {
+						tempChannel[1][col][0] = 0;
+					}
+				}else if(tempChannel[1][col][1] == pinNum) {
+					if(isPinConnected(tempChannel, 1, col, 1, col, pinNum, 1) == 1) {
+						tempChannel[1][col][1] = 0;
+					}
+				}
+			}
+			pinNum = -tempChannel[numOfRows-1][col][0];
+			if(netsToRemove.contains(pinNum)) {
+				if(tempChannel[numOfRows-2][col][0] == pinNum) {
+					if(isPinConnected(tempChannel, numOfRows-2, col, numOfRows-2, col, pinNum, 0) == 1) {
+						tempChannel[numOfRows-2][col][0] = 0;
+					}
+				}else if(tempChannel[numOfRows-2][col][1] == pinNum) {
+					if(isPinConnected(tempChannel, numOfRows-2, col, numOfRows-2, col, pinNum, 1) == 1) {
+						tempChannel[numOfRows-2][col][1] = 0;
+					}
+				}
+			}
+		}
+		Genotype genotypeCopy = new Genotype(tempChannel, numOfRows, numOfPins);
+		genotypeCopy.maxExtension = 10;
 		genotypeCopy.printBoard();
+		if(genotypeCopy.connectUnconnectedPins() == 1) {
+			return genotypeCopy;
+		}
+		return null;
+	}
+	private Genotype mutation3() {
+		Integer[][][] tempChannel = new Integer[this.numOfRows][this.numOfPins][layers];
+		copyChannel(tempChannel);
+		Genotype genotypeCopy = new Genotype(tempChannel, numOfRows, numOfPins);
+		genotypeCopy.maxExtension = 10;
+		genotypeCopy.addRowOnChannel();
+		calcF1();
+		calcF2();
+		return genotypeCopy;
+	}
+	private Genotype mutation4() {
+		if(numOfRows - 3 <= 1) {
+			return null;
+		}
+		int rowToDelete = randomNumInRange(2, numOfRows-3);
+		Integer[][][] tempChannel = new Integer[this.numOfRows-1][this.numOfPins][layers];
+		int row = 0;
+		for (int y = 0; y < this.numOfRows; y++) {
+			if (y != rowToDelete) {
+				for (int x = 0; x < this.numOfPins; x++) {
+					for (int z = 0; z < layers; z++) {
+						tempChannel[row][x][z] = channel[y][x][z];
+					}
+				}
+				row++;
+			}
+
+		}
+		Genotype genotypeCopy = new Genotype(tempChannel, numOfRows-1, numOfPins);
+		genotypeCopy.maxExtension = 10;
 		if(genotypeCopy.connectUnconnectedPins() == 1) {
 			return genotypeCopy;
 		}
@@ -132,7 +299,7 @@ public class Genotype {
 			p[row][col][z] = pinNum;
 			return 1;
 		}
-		p[row][col][z] = pinNum;
+		p[row][col][z] = 0;
 		return 0;
 	}
 	private int connectUnconnectedPins() {
@@ -174,9 +341,7 @@ public class Genotype {
 			}
 			
 		}
-		System.out.println(connectedPins.size());
 		Random randomGenerator = new Random();
-		int numOfExtension = 0;
 		while (!notConnectedPins.isEmpty()) {
 			int randomInt = randomGenerator.nextInt(notConnectedPins.size());
 			Pin s = notConnectedPins.get(randomInt);
@@ -223,13 +388,7 @@ public class Genotype {
 			}
 			connectedPins.add(s);
 			boolean isPinsConnected = false;
-			while(numOfExtension < maxExtension && !isPinsConnected) {
-				isPinsConnected = (connectPins(s,t) == 1)? true:false;
-				if(!isPinsConnected) {
-					addRowOnChannel();
-					numOfExtension++;
-				}
-			}
+			isPinsConnected = (connectPins(s,t) == 1)? true:false;
 			if(!isPinsConnected) {
 				return 0;
 			}
@@ -1499,9 +1658,17 @@ public class Genotype {
 			s.printBoard();
 			System.out.println("F1: "+s.getF1());
 			System.out.println("F2: "+s.getF2());
-			Genotype x = s.mutation1();
+			Genotype x = s.mutation4();
 			if(x != null) {
-				x.printBoard();
+				s.channel = x.channel;
+				s.numOfRows = x.numOfRows;
+				s.numOfPins = x.numOfPins;
+				s.yind = s.numOfRows - 2;
+				s.F1 = x.F1;
+				s.F2 = x.F2;
+				s.printBoard();
+				System.out.println("F1: "+s.getF1());
+				System.out.println("F2: "+s.getF2());
 			}
 		}else {
 			System.out.println("no solution");
