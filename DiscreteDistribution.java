@@ -31,12 +31,19 @@ public class DiscreteDistribution {
 	}
 	public static void main(String[] args) {
 		ArrayList<Double> probabalities = new ArrayList<Double>();
-		probabalities.add((double)3/6);
-		probabalities.add((double)2/6);
-		probabalities.add((double)1/6);
+		double mut1Prob = 0.001;
+		double mut2Prob = 0.002;
+		double mut3Prob = 0.01;
+		double mut4Prob = 0.01;
+		double noMutProb = 1 - mut1Prob - mut2Prob - mut3Prob - mut4Prob;
+		probabalities.add(noMutProb);
+		probabalities.add(mut3Prob);
+		probabalities.add(mut4Prob);
+		probabalities.add(mut2Prob);
+		probabalities.add(mut1Prob);
 		DiscreteDistribution distribution = new DiscreteDistribution(probabalities);
-		for(int i = 0 ; i < 7; i++) {
-			System.out.println("prob = "+distribution.randomSample());
+		for(int i = 0 ; i < 20; i++) {
+			System.out.println("index = "+distribution.randomSample());
 
 		}
 	
