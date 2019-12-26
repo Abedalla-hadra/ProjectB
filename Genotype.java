@@ -199,8 +199,8 @@ public class Genotype {
 		}
         Random rand = new Random(); 
         int numOfNetsToRemove = randomNumInRange(1, set.size()-1);
-        System.out.println("net size "+set.size());
-        System.out.println("numOfNetsToRemove "+numOfNetsToRemove);
+        //System.out.println("net size "+set.size());
+        //System.out.println("numOfNetsToRemove "+numOfNetsToRemove);
         for(int i = 0; i < numOfNetsToRemove; i++) {
         	int index = rand.nextInt(nets.size());
         	netsToRemove.add(nets.get(index));
@@ -650,6 +650,8 @@ public class Genotype {
 			}
 		}
 		deleteUnoccupiedRows();
+		calcF1();
+		calcF2();
 		return 1;
 	}
 	public void setFitness(double _fitness) {
@@ -1640,8 +1642,8 @@ public class Genotype {
 		}
 	}
 	public static void main(String[] args) {
-		ArrayList<Integer> out = new ArrayList<Integer>(Arrays.asList(2, 3,1));
-		ArrayList<Integer> in = new ArrayList<Integer>(Arrays.asList(1,2,3));
+		ArrayList<Integer> out = new ArrayList<Integer>(Arrays.asList(2, 3,1,4));
+		ArrayList<Integer> in = new ArrayList<Integer>(Arrays.asList(1,4,2,3));
 		Genotype s = new Genotype(in, out, 2);
 				//int y = s.getYindexOfPin(new Pin(1,0,false));
 		//System.out.print(y);
@@ -1658,6 +1660,8 @@ public class Genotype {
 			s.printBoard();
 			System.out.println("F1: "+s.getF1());
 			System.out.println("F2: "+s.getF2());
+			
+			/*
 			Genotype x = s.mutation4();
 			if(x != null) {
 				s.channel = x.channel;
@@ -1669,7 +1673,9 @@ public class Genotype {
 				s.printBoard();
 				System.out.println("F1: "+s.getF1());
 				System.out.println("F2: "+s.getF2());
+				
 			}
+			*/
 		}else {
 			System.out.println("no solution");
 		}

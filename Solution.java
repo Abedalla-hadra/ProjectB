@@ -16,6 +16,8 @@ public class Solution {
 	static int layers = 2;
 	ArrayList<Integer> inputs, outputs; // input and output pins
 	int sizeOfPopulation;
+	int maxNumDescndants;
+	int maxNumOfGenerations;
 	double fitnessSum;
 	/********************/
 	/*
@@ -27,8 +29,54 @@ public class Solution {
 		}
 		this.inputs = new ArrayList<Integer>(inputs);
 		this.outputs = new ArrayList<Integer>(outputs);
-		this.sizeOfPopulation = 6;
+		this.sizeOfPopulation = 10;
+		this.maxNumDescndants = 5;
 		this.fitnessSum = 0;
+		this.maxNumOfGenerations = 10;
+
+	}
+	public Genotype getSolution() {
+		ArrayList<Genotype> population = new ArrayList<>();
+		int count = 0;
+		
+		while(count <sizeOfPopulation) {
+			Genotype s = new Genotype(inputs, outputs, 2);
+			if(s.randomSolution() == 1) {
+				population.add(s);
+				count++;
+			}
+		}
+		calcFitnessOfPopulation(population);
+		Genotype bestIndividual = population.get(population.size()-1);
+		
+		for(int i = 0; i < maxNumOfGenerations; i++) {
+			ArrayList<Genotype> descendants = new ArrayList<Genotype>();
+			//System.out.println(population.size());
+
+			for(int j = 0; j < maxNumDescndants; j++) {
+				Genotype pAlpha = selection(population);
+				Genotype pBeta = selection(population);
+				Crossover crossover = new Crossover(pAlpha,pBeta);
+				Genotype descndant = crossover.crossoverOp();
+				while(descndant == null) {
+					descndant = crossover.crossoverOp();
+				}
+				descendants.add(descndant);
+			}
+			calcFitnessOfPopulation(descendants);
+			population = reduction(population, descendants);
+			if(bestIndividual.getFitness() < population.get(population.size()-1).getFitness()) {
+				bestIndividual = population.get(population.size()-1);
+			}
+			mutationOnPopulation(population);
+			calcFitnessOfPopulation(population);
+		}
+		return bestIndividual;
+	}
+	private void mutationOnPopulation(ArrayList<Genotype> population) {
+		for(int i = 0; i < population.size(); i++) {
+			population.get(i).mutationOperator();
+		}
 	}
 	private void preScale(double umax, double uavg, double umin,ArrayList<Double> ab) {
 		double fmultiple = 2.0, delta;
@@ -41,7 +89,7 @@ public class Solution {
 			ab.add((uavg/delta));
 			ab.add(((-umin*uavg)/delta));
 		}
-		System.out.println("a= "+ab.get(0)+" b= "+ab.get(1));
+		//System.out.println("a= "+ab.get(0)+" b= "+ab.get(1));
 	}
 	private double scalePop(ArrayList<Genotype> channels, double max, double avg, double min) {
 		
@@ -72,9 +120,15 @@ public class Solution {
 	    		return -1;
 	    	}
 	    }};
+	    for(Genotype geno : channels) {
+	    	geno.calcF1();
+	    	geno.calcF2();
+	    }
+		
 		Collections.sort(channels,compareById);
 		int startIndex = 0;
 		int endIndex = 0;
+		this.fitnessSum = 0;
 		for(int i = 1; i < channels.size()+1; i++) {
 			if(i == channels.size() && startIndex == i-1) {
 				channels.get(startIndex).setFitness(channels.get(startIndex).getF1());
@@ -99,6 +153,9 @@ public class Solution {
 					double fitnessPend = channels.get(endIndex).getFitness();
 					double deltaF = fitnessPend - fitnessPstart;
 					double deltaF2 = channels.get(endIndex).getF2() - channels.get(startIndex).getF2();
+					if(deltaF2 == 0) {
+						deltaF2 = endIndex - startIndex+1;
+					}
 					double fitnessPx = fitnessPend - (deltaF*(channels.get(endIndex).getF2()-channels.get(x).getF2()))/deltaF2;
 					channels.get(x).setFitness(fitnessPx);
 				}
@@ -106,16 +163,18 @@ public class Solution {
 				endIndex = i;
 			}
 		}
-		for(int i = 0; i < channels.size(); i++) {
-			System.out.println("Fitness: "+channels.get(i).getFitness());
-		}
 		double max = channels.get(channels.size() -1).getFitness() , min = channels.get(0).getFitness() , avg;
 		for(int i = 0; i < channels.size(); i++) {
 			fitnessSum += channels.get(i).getFitness();
-		}
+		}/*
+		for(Genotype geno : channels) {
+			System.out.println(geno.fitness);
+		}*/
 		avg = fitnessSum/((double)channels.size());
 		this.fitnessSum = scalePop(channels,max, avg, min);
-		System.out.println("sum Fitness: "+fitnessSum);
+	
+
+		//System.out.println("sum Fitness: "+fitnessSum);
 	}
 	public Genotype selection(ArrayList<Genotype> channels) {
 		ArrayList<Double> probs = new ArrayList<Double>();
@@ -128,24 +187,41 @@ public class Solution {
 		int randChannel = distribution.randomSample();
 		return channels.get(channels.size()-1-randChannel);
 	}
+	public ArrayList<Genotype> reduction(ArrayList<Genotype> population, ArrayList<Genotype> descendants){
+		ArrayList<Genotype> bestPopulation = new ArrayList<Genotype>();
+		int i = population.size()-1;
+		int j = descendants.size()-1;
+		while(bestPopulation.size() < sizeOfPopulation && i >= 0 && j >= 0) {
+			if(population.get(i).getFitness() >= descendants.get(j).getFitness()) {
+				bestPopulation.add(population.get(i));
+				i--;
+			}else {
+				bestPopulation.add(descendants.get(j));
+				j--;
+			}
+		}
+		while(bestPopulation.size() < sizeOfPopulation && i >= 0) {
+			bestPopulation.add(population.get(i));
+			i--;
+		}
+		while(bestPopulation.size() < sizeOfPopulation && j >= 0) {
+			bestPopulation.add(descendants.get(j));
+			j--;
+		}
 
+		return bestPopulation;
+	}
 	/********************/
 	public static void main(String[] args) {
 
 		ArrayList<Integer> out = new ArrayList<Integer>(Arrays.asList(2, 3,1));
 		ArrayList<Integer> in = new ArrayList<Integer>(Arrays.asList(1,2,3));
 		Solution sol = new Solution(out, in);
-		ArrayList<Genotype> channels = new ArrayList<>();
-		int count = 0;
+		Genotype best = sol.getSolution();
+		best.printBoard();
 		
-		while(count <6) {
-			Genotype s = new Genotype(in, out, 2);
-			if(s.randomSolution() == 1) {
-				channels.add(s);
-				count++;
-			}
-
-		}
+		
+		/*
 		Comparator<Genotype> compareById = (Genotype o1, Genotype o2) -> {if(o1.getF1() == o2.getF1()) {
 	    	if(o1.getF2() > o2.getF2()) {
 	    		return 1;
@@ -170,6 +246,7 @@ public class Solution {
 		}
 		double fitness = sol.selection(channels).getFitness();
 		System.out.println(fitness);
+		*/
 	}
 	
 	/********************/
