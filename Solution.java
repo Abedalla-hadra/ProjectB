@@ -71,6 +71,7 @@ public class Solution {
 			mutationOnPopulation(population);
 			calcFitnessOfPopulation(population);
 		}
+		bestIndividual.optimizeIndividual();
 		return bestIndividual;
 	}
 	private void mutationOnPopulation(ArrayList<Genotype> population) {

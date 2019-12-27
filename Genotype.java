@@ -394,6 +394,18 @@ public class Genotype {
 			}
 			//System.out.print("pin s "+s.getPinNum()+" "+s.getIndex()+" pin t "+t.getPinNum()+" "+t.getIndex()+"\n");
 		}
+		for(int i = 0; i < connectedPins.size(); i++) {
+			for(int j = i; j < connectedPins.size(); j++) {
+				boolean res = checkIfTwoPinsConnected(channel, connectedPins.get(i), connectedPins.get(j));
+				if(res == false) {
+					boolean isPinsConnected = false;
+					isPinsConnected = (connectPins(connectedPins.get(i),connectedPins.get(j)) == 1)? true:false;
+					if(!isPinsConnected) {
+						return 0;
+					}
+				}
+			}
+		}
 		calcF1();
 		calcF2();
 		
@@ -756,6 +768,37 @@ public class Genotype {
 		numOfRows = newRowsNum;
 		yind = newRowsNum-2;
 		channel = newSub;
+	}
+	private void checkIfBetterAndUpdateGenotype(Genotype other) {
+		if(other == null) {
+			return;
+		}
+		if(other.getF1() > this.F1) {
+			this.channel = other.channel;
+			this.numOfRows = other.numOfRows;
+			this.numOfPins = other.numOfPins;
+			this.yind = this.numOfRows - 2;
+			this.F1 = other.F1;
+			this.F2 = other.F2;
+		}else if(other.getF1() == this.F1 && other.getF2() > this.F2) {
+			this.channel = other.channel;
+			this.numOfRows = other.numOfRows;
+			this.numOfPins = other.numOfPins;
+			this.yind = this.numOfRows - 2;
+			this.F1 = other.F1;
+			this.F2 = other.F2;
+		}
+		
+	}
+	public void optimizeIndividual() {
+		Genotype genoAfterMutation = mutation1();
+		checkIfBetterAndUpdateGenotype(genoAfterMutation);
+		genoAfterMutation = mutation2();
+		checkIfBetterAndUpdateGenotype(genoAfterMutation);
+		genoAfterMutation = mutation3();
+		checkIfBetterAndUpdateGenotype(genoAfterMutation);
+		genoAfterMutation = mutation4();
+		checkIfBetterAndUpdateGenotype(genoAfterMutation);
 	}
 	
 	//returns num of rows without counting the first and the last row
