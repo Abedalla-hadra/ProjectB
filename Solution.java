@@ -29,8 +29,8 @@ public class Solution {
 		}
 		this.inputs = new ArrayList<Integer>(inputs);
 		this.outputs = new ArrayList<Integer>(outputs);
-		this.sizeOfPopulation = 10;
-		this.maxNumDescndants = 5;
+		this.sizeOfPopulation = 20;
+		this.maxNumDescndants = 10;
 		this.fitnessSum = 0;
 		this.maxNumOfGenerations = 10;
 
@@ -220,33 +220,6 @@ public class Solution {
 		Genotype best = sol.getSolution();
 		best.printBoard();
 		
-		
-		/*
-		Comparator<Genotype> compareById = (Genotype o1, Genotype o2) -> {if(o1.getF1() == o2.getF1()) {
-	    	if(o1.getF2() > o2.getF2()) {
-	    		return 1;
-	    	}else {
-	    		return -1;
-	    	}
-	    }else{
-	    	if(o1.getF1() > o2.getF1()) {
-	    		return 1;
-	    	}else {
-	    		return -1;
-	    	}
-	    }};
-		Collections.sort(channels,compareById);
-		for(int i = 0; i < channels.size(); i++) {
-			System.out.println("F1: "+channels.get(i).getF1()+" F2: "+channels.get(i).getF2());
-		}
-		System.out.println("calculating Fitness");
-		sol.calcFitnessOfPopulation(channels);
-		for(int i = 0; i < channels.size(); i++) {
-			System.out.println("Fitness: "+channels.get(i).getFitness());
-		}
-		double fitness = sol.selection(channels).getFitness();
-		System.out.println(fitness);
-		*/
 	}
 	
 	/********************/

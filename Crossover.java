@@ -34,6 +34,9 @@ public class Crossover {
 	}
 	private int transferRoutingWithinRange(Integer[][][] p,Integer[][][] subP,int startY,int startX,int y,int x,int pinNum
 			,int minX,int maxX,int maxY,int z) {
+		if(pinNum == 0) {
+			return 0;
+		}
 		if(x > maxX || x < minX || y < 1 || y > maxY-1) {
 			return 0;		
 		}
