@@ -29,10 +29,10 @@ public class Solution {
 		}
 		this.inputs = new ArrayList<Integer>(inputs);
 		this.outputs = new ArrayList<Integer>(outputs);
-		this.sizeOfPopulation = 20;
-		this.maxNumDescndants = 10;
+		this.sizeOfPopulation = 50;
+		this.maxNumDescndants = 30;
 		this.fitnessSum = 0;
-		this.maxNumOfGenerations = 10;
+		this.maxNumOfGenerations = 70;
 
 	}
 	public Genotype getSolution() {
@@ -40,7 +40,7 @@ public class Solution {
 		int count = 0;
 		
 		while(count <sizeOfPopulation) {
-			Genotype s = new Genotype(inputs, outputs, 2);
+			Genotype s = new Genotype(inputs, outputs, 4);
 			if(s.randomSolution() == 1) {
 				population.add(s);
 				count++;
@@ -110,14 +110,18 @@ public class Solution {
 		Comparator<Genotype> compareById = (Genotype o1, Genotype o2) -> {if(o1.getF1() == o2.getF1()) {
 	    	if(o1.getF2() > o2.getF2()) {
 	    		return 1;
-	    	}else {
+	    	}else if(o1.getF2() < o2.getF2()){
 	    		return -1;
+	    	}else {
+	    		return 0;
 	    	}
 	    }else{
 	    	if(o1.getF1() > o2.getF1()) {
 	    		return 1;
-	    	}else {
+	    	}else if(o1.getF1() < o2.getF1()){
 	    		return -1;
+	    	}else {
+	    		return 0;
 	    	}
 	    }};
 	    for(Genotype geno : channels) {
@@ -214,8 +218,8 @@ public class Solution {
 	/********************/
 	public static void main(String[] args) {
 
-		ArrayList<Integer> out = new ArrayList<Integer>(Arrays.asList(2, 3,1));
-		ArrayList<Integer> in = new ArrayList<Integer>(Arrays.asList(1,2,3));
+		ArrayList<Integer> out = new ArrayList<Integer>(Arrays.asList(2, 3,1,4,1));
+		ArrayList<Integer> in = new ArrayList<Integer>(Arrays.asList(2,1,4,2,3));
 		Solution sol = new Solution(out, in);
 		Genotype best = sol.getSolution();
 		best.printBoard();

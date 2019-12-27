@@ -1719,8 +1719,8 @@ public class Genotype {
 		}
 	}
 	public static void main(String[] args) {
-		ArrayList<Integer> out = new ArrayList<Integer>(Arrays.asList(2, 3,1,4));
-		ArrayList<Integer> in = new ArrayList<Integer>(Arrays.asList(1,4,2,3));
+		ArrayList<Integer> out = new ArrayList<Integer>(Arrays.asList(2, 3,1,2));
+		ArrayList<Integer> in = new ArrayList<Integer>(Arrays.asList(1,1,2,3));
 		Genotype s = new Genotype(in, out, 3);
 				//int y = s.getYindexOfPin(new Pin(1,0,false));
 		//System.out.print(y);
