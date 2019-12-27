@@ -575,6 +575,15 @@ public class Genotype {
 				return 0;
 			}
 		}
+		for(HashMap.Entry<Integer,ArrayList<Pin>> entry : netsInP1.entrySet()) {
+			if(entry.getValue().size() >= 2) {
+				if(netsInP2.containsKey(entry.getKey())) {
+					if(netsInP2.get(entry.getKey()).size() >=2 ) {
+						needToBeConnectedInP1.add(entry.getValue().get(0));
+					}
+				}
+			}
+		}
 		while(!needToBeConnectedInP1.isEmpty()) {
 			Pin s = needToBeConnectedInP1.get(0);
 			needToBeConnectedInP1.remove(0);
@@ -710,6 +719,7 @@ public class Genotype {
 			}
 		}
 		//clean up unneeded vias
+		/*
 		for(int col = 0; col < numOfPins; col++) {
 			if(newSub[1][col][0] != 0 && newSub[1][col][0] == newSub[1][col][1]) {
 				if(col > 0 && newSub[1][col-1][0] == newSub[1][col][0]) {
@@ -742,6 +752,7 @@ public class Genotype {
 				}
 			}
 		}
+		*/
 		numOfRows = newRowsNum;
 		yind = newRowsNum-2;
 		channel = newSub;
@@ -1719,8 +1730,8 @@ public class Genotype {
 		}
 	}
 	public static void main(String[] args) {
-		ArrayList<Integer> out = new ArrayList<Integer>(Arrays.asList(2, 3,1,2));
-		ArrayList<Integer> in = new ArrayList<Integer>(Arrays.asList(1,1,2,3));
+		ArrayList<Integer> out = new ArrayList<Integer>(Arrays.asList(2, 3,1,4,1));
+		ArrayList<Integer> in = new ArrayList<Integer>(Arrays.asList(2,1,4,2,3));
 		Genotype s = new Genotype(in, out, 3);
 				//int y = s.getYindexOfPin(new Pin(1,0,false));
 		//System.out.print(y);

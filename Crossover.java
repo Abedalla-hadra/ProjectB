@@ -133,6 +133,7 @@ public class Crossover {
 			}
 		}
 		Genotype desc = new Genotype(descendant,descendantRowsNum,numOfPins);
+		//desc.printBoard();
 		int res = desc.continueSolutionRandomly(pinsConnectedP1, pinsConnectedP2, pinsNotConnectedP1, pinsNotConnectedP2);
 		if(res == 1 ) {
 			return desc;
@@ -357,13 +358,13 @@ public class Crossover {
 	}
 	
 	public static void main(String[] args) {
-		ArrayList<Integer> out = new ArrayList<Integer>(Arrays.asList(2, 3,1));
-		ArrayList<Integer> in = new ArrayList<Integer>(Arrays.asList(1,2,3));
+		ArrayList<Integer> out = new ArrayList<Integer>(Arrays.asList(2, 3,1,1));
+		ArrayList<Integer> in = new ArrayList<Integer>(Arrays.asList(1,1,2,3));
         int count = 0;
         ArrayList<Genotype> channels = new ArrayList<>();
 		
 		while(count <2) {
-			Genotype s = new Genotype(in, out, 2);
+			Genotype s = new Genotype(in, out, 4);
 			if(s.randomSolution() == 1) {
 				channels.add(s);
 				count++;

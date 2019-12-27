@@ -32,7 +32,7 @@ public class Solution {
 		this.sizeOfPopulation = 50;
 		this.maxNumDescndants = 30;
 		this.fitnessSum = 0;
-		this.maxNumOfGenerations = 70;
+		this.maxNumOfGenerations = 50;
 
 	}
 	public Genotype getSolution() {
@@ -219,7 +219,7 @@ public class Solution {
 	public static void main(String[] args) {
 
 		ArrayList<Integer> out = new ArrayList<Integer>(Arrays.asList(2, 3,1,4,1));
-		ArrayList<Integer> in = new ArrayList<Integer>(Arrays.asList(2,1,4,2,3));
+		ArrayList<Integer> in = new ArrayList<Integer>(Arrays.asList(1,1,4,2,3));
 		Solution sol = new Solution(out, in);
 		Genotype best = sol.getSolution();
 		best.printBoard();
