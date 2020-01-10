@@ -1,14 +1,9 @@
 package ProjectB;
 
-import java.awt.List;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Random;
-import java.util.Set;
 
 public class Solution {
 
@@ -19,6 +14,7 @@ public class Solution {
 	int maxNumDescndants;
 	int maxNumOfGenerations;
 	double fitnessSum;
+	int ymin;
 	/********************/
 	/*
 	 * Returns an empty solution given the problem input and output pins.
@@ -32,7 +28,8 @@ public class Solution {
 		this.sizeOfPopulation = 50;
 		this.maxNumDescndants = 30;
 		this.fitnessSum = 0;
-		this.maxNumOfGenerations = 50;
+		this.maxNumOfGenerations = 100;
+		this.ymin =inputs.size()/2 + inputs.size()/4+1;
 
 	}
 	public Genotype getSolution() {
@@ -40,7 +37,7 @@ public class Solution {
 		int count = 0;
 		
 		while(count <sizeOfPopulation) {
-			Genotype s = new Genotype(inputs, outputs, 4);
+			Genotype s = new Genotype(inputs, outputs, ymin);
 			if(s.randomSolution() == 1) {
 				population.add(s);
 				count++;
@@ -51,17 +48,19 @@ public class Solution {
 		
 		for(int i = 0; i < maxNumOfGenerations; i++) {
 			ArrayList<Genotype> descendants = new ArrayList<Genotype>();
-			//System.out.println(population.size());
-
-			for(int j = 0; j < maxNumDescndants; j++) {
+			while(descendants.size() < maxNumDescndants) {
 				Genotype pAlpha = selection(population);
 				Genotype pBeta = selection(population);
 				Crossover crossover = new Crossover(pAlpha,pBeta);
 				Genotype descndant = crossover.crossoverOp();
-				while(descndant == null) {
+				int counter = 0;
+				while(descndant == null && counter < 20) {
 					descndant = crossover.crossoverOp();
+					counter++;
 				}
-				descendants.add(descndant);
+				if(descndant != null) {
+					descendants.add(descndant);
+				}
 			}
 			calcFitnessOfPopulation(descendants);
 			population = reduction(population, descendants);
@@ -69,6 +68,7 @@ public class Solution {
 				bestIndividual = population.get(population.size()-1);
 			}
 			mutationOnPopulation(population);
+
 			calcFitnessOfPopulation(population);
 		}
 		bestIndividual.optimizeIndividual();
@@ -219,8 +219,8 @@ public class Solution {
 	/********************/
 	public static void main(String[] args) {
 
-		ArrayList<Integer> out = new ArrayList<Integer>(Arrays.asList(2, 3,1,4,1));
-		ArrayList<Integer> in = new ArrayList<Integer>(Arrays.asList(1,1,4,2,3));
+		ArrayList<Integer> out = new ArrayList<Integer>(Arrays.asList(1,2,4,3,5));
+		ArrayList<Integer> in = new ArrayList<Integer>(Arrays.asList(5,3,2,1,4));
 		Solution sol = new Solution(out, in);
 		Genotype best = sol.getSolution();
 		best.printBoard();

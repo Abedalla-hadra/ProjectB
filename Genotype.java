@@ -60,7 +60,7 @@ public class Genotype {
 	public Genotype(Integer[][][] _channel,int _numOfRows,int _numOfPins) {
 		this.numOfRows = _numOfRows;
 		this.yind = _numOfRows - 2;
-		this.maxExtension = _numOfRows+4;
+		this.maxExtension = 10;
 		this.numOfPins = _numOfPins;
 		this.F1 = -1;
 		this.F2 = -1;

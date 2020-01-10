@@ -32,6 +32,92 @@ public class Crossover {
 		}
 		return randomNum;
 	}
+	private void transferRoutingWithinRangeBFS(Integer[][][] channel,Integer[][][] subP,int startY,int startX,int y,int x,int pinNum
+			,int minX,int maxX,int maxY,int z) {
+		Point[][][] graph = new Point[maxY+1][numOfPins][layers];
+		for (int layer = 0; layer < 2; layer++) {
+			for (int row = 0; row < maxY; row++) {
+				for (int col = 0; col < numOfPins; col++) {
+					if( channel[row][col][layer] == pinNum && col >= minX && col <=maxX) {
+						graph[row][col][layer] = new Point(row,col,layer);
+					}else {
+						graph[row][col][layer] = null;
+					}
+				}
+			}
+		}
+		int endX = 0;
+		int endY = 0;
+		int endZ =0;
+		boolean reachedDest = false;
+		Queue<Point> queue = new LinkedList<>();
+		graph[startY][startX][z].setDiscovered(true);
+		queue.add(graph[startY][startX][z]);
+		while(!queue.isEmpty() && !reachedDest ) {
+			Point p = queue.remove();
+			if((p.getY() != startY || p.getX() != startX) && p.getY() == 1 && channel[0][p.getX()][p.getZ()] == -pinNum) {
+				reachedDest = true;
+				endX = p.getX();
+				endY = p.getY();
+				endZ = p.getZ();
+			}else if((p.getY() != startY || p.getX() != startX) && p.getY() == maxY-1 && channel[maxY][p.getX()][p.getZ()] == -pinNum) {
+				reachedDest = true;
+				endX = p.getX();
+				endY = p.getY();
+				endZ = p.getZ();
+			}else {
+				if(p.getY() < maxY && graph[p.getY()+1][p.getX()][p.getZ()] != null &&
+						!graph[p.getY()+1][p.getX()][p.getZ()].discovered) {
+					graph[p.getY()+1][p.getX()][p.getZ()].setDiscovered(true);
+					graph[p.getY()+1][p.getX()][p.getZ()].setParetn(p);
+					queue.add(graph[p.getY()+1][p.getX()][p.getZ()]);
+				}
+				if(p.getY() > 0 && graph[p.getY()-1][p.getX()][p.getZ()] != null &&
+						!graph[p.getY()-1][p.getX()][p.getZ()].discovered) {
+					graph[p.getY()-1][p.getX()][p.getZ()].setDiscovered(true);
+					graph[p.getY()-1][p.getX()][p.getZ()].setParetn(p);
+					queue.add(graph[p.getY()-1][p.getX()][p.getZ()]);
+				}
+				if(p.getX() < maxX && graph[p.getY()][p.getX()+1][p.getZ()] != null && 
+						!graph[p.getY()][p.getX()+1][p.getZ()].discovered) {
+					graph[p.getY()][p.getX()+1][p.getZ()].setDiscovered(true);
+					graph[p.getY()][p.getX()+1][p.getZ()].setParetn(p);
+					queue.add(graph[p.getY()][p.getX()+1][p.getZ()]);
+				}
+				if(p.getX() > minX && graph[p.getY()][p.getX()-1][p.getZ()] != null && 
+						!graph[p.getY()][p.getX()-1][p.getZ()].discovered) {
+					graph[p.getY()][p.getX()-1][p.getZ()].setDiscovered(true);
+					graph[p.getY()][p.getX()-1][p.getZ()].setParetn(p);
+					queue.add(graph[p.getY()][p.getX()-1][p.getZ()]);
+				}
+				int z2 = (p.getZ() == 1)? 0 : 1;
+				if( graph[p.getY()][p.getX()][z2] != null && !graph[p.getY()][p.getX()][z2].discovered ) {
+					graph[p.getY()][p.getX()][z2].setDiscovered(true);
+					graph[p.getY()][p.getX()][z2].setParetn(p);
+					queue.add(graph[p.getY()][p.getX()][z2]);
+				}
+			}
+		}
+		if(reachedDest == false) {
+			return;
+		}
+		boolean pathDidNotEnd = true;
+		Point p = graph[endY][endX][endZ];
+		while(pathDidNotEnd && p != null) {
+			if(subP[p.getY()][p.getX()][p.getZ()]!=pinNum) {
+				if(p.getY() == 0 || p.getY() == maxY) {
+					subP[p.getY()][p.getX()][p.getZ()] = -pinNum;
+				}else {
+					subP[p.getY()][p.getX()][p.getZ()] = pinNum;
+
+				}
+			}
+			if(p.getX() == startX && p.getY() == startY) {
+				pathDidNotEnd = false;
+			}
+			p = p.parent;
+		}
+	}
 	private int transferRoutingWithinRange(Integer[][][] p,Integer[][][] subP,int startY,int startX,int y,int x,int pinNum
 			,int minX,int maxX,int maxY,int z) {
 		if(pinNum == 0) {
@@ -51,12 +137,11 @@ public class Crossover {
 		}
 		p[y][x][z] = -pinNum;
 		subP[y][x][z] = pinNum;
-		int res1 = transferRoutingWithinRange(p,subP,startY,startX,y+1,x,pinNum,minX,maxX,maxY,z);
-		int res2 = transferRoutingWithinRange(p,subP,startY,startX,y-1,x,pinNum,minX,maxX,maxY,z);
-		int res3 = transferRoutingWithinRange(p,subP,startY,startX,y,x+1,pinNum,minX,maxX,maxY,z);
-		int res4 = transferRoutingWithinRange(p,subP,startY,startX,y,x-1,pinNum,minX,maxX,maxY,z);
-		int res5 = transferRoutingWithinRange(p,subP,startY,startX,y,x,pinNum,minX,maxX,maxY,(z+1)%2);
-		if(res1 == 1 || res2 == 1 || res3 == 1 || res4 == 1 || res5 == 1) {
+		if(transferRoutingWithinRange(p,subP,startY,startX,y+1,x,pinNum,minX,maxX,maxY,z) == 1 || 
+				transferRoutingWithinRange(p,subP,startY,startX,y-1,x,pinNum,minX,maxX,maxY,z) == 1 ||
+				transferRoutingWithinRange(p,subP,startY,startX,y,x+1,pinNum,minX,maxX,maxY,z) == 1 ||
+				transferRoutingWithinRange(p,subP,startY,startX,y,x-1,pinNum,minX,maxX,maxY,z) == 1 ||
+				transferRoutingWithinRange(p,subP,startY,startX,y,x,pinNum,minX,maxX,maxY,(z+1)%2) == 1) {
 			p[y][x][z] = pinNum;
 			return 1;
 		}
@@ -138,6 +223,7 @@ public class Crossover {
 		if(res == 1 ) {
 			return desc;
 		}
+
 		return null;
 	}
 
@@ -358,8 +444,8 @@ public class Crossover {
 	}
 	
 	public static void main(String[] args) {
-		ArrayList<Integer> out = new ArrayList<Integer>(Arrays.asList(2, 3,1,1));
-		ArrayList<Integer> in = new ArrayList<Integer>(Arrays.asList(1,1,2,3));
+		ArrayList<Integer> out = new ArrayList<Integer>(Arrays.asList(1,2,3));
+		ArrayList<Integer> in = new ArrayList<Integer>(Arrays.asList(3,2,1));
         int count = 0;
         ArrayList<Genotype> channels = new ArrayList<>();
 		
