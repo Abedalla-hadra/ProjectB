@@ -88,11 +88,11 @@ public class GUI{
 			int numOfRows = channel.getNumOfRows() + 2;
 			int lastValue = 0;
 			for (int z = 0; z < 2; z++) {
-				int x = 50;
+				int x = 49;
 				int y = 30;
 				if(z == 1) {
 					x = 52;
-					y+=2;
+					y+=3;
 				}
 				
 				for (int row = 0; row < numOfRows; row++) {
@@ -119,7 +119,7 @@ public class GUI{
 							g2.setStroke(stroke1);
 
 						}else if(row == numOfRows - 1 && z == 0 ) {
-							g2.drawString(String.valueOf(-1 * board[row][col][z]), x + col * 80-2, y+5);
+							g2.drawString(String.valueOf(-1 * board[row][col][z]), x + col * 80-2, y+7);
 							g2.setStroke(new BasicStroke(1.5f));
 							g2.setColor(Color.gray);
 							if(col != 0) {
