@@ -143,7 +143,7 @@ public class GUI{
 							if(board[row-1][col][z] == board[row][col][z] && board[row][col][z] != 0) {
 								g2.drawLine(x+col*80, y-50, x+col*80, y);
 							}
-							if(board[row][col][z] == lastValue && board[row][col][z] != 0) {
+							if(board[row][col][z] == lastValue && board[row][col][z] > 0) {
 								g2.drawLine(x+(col-1)*80, y, x+col*80, y);
 							}
 							if(z == 1 && board[row][col][z] == board[row][col][0] && board[row][col][z] > 0) {
@@ -172,7 +172,7 @@ public class GUI{
 		Solution sol = new Solution(inputs,outputs);
 		channel = sol.getSolution();
 		channel.printBoard();
-		
+		System.out.print(channel.getChannelLength());
 		JFrame f2 = new JFrame("Solution");
 		f2.getContentPane().add(new DrawPanel());
 		int width = inputs.size()*80+100;

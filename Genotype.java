@@ -1039,6 +1039,19 @@ public class Genotype {
 		sum+= countNumOfVias()*b;
 		F2 = 1/sum;
 	}
+	public int getChannelLength() {
+		HashSet<Integer> set = new HashSet<>();
+		int sum = 0;
+		for(int i = 0 ; i < numOfPins; i++) {
+			if(!set.contains(channel[0][i][0])){
+				set.add(channel[0][i][0]);
+				int net = -channel[0][i][0];
+				sum += lenthOfSegmentsInPreferredLayer(net) + lenthOfSegmentsNotInPreferredLayer(net);
+						
+			}
+		}
+		return sum;
+	}
 	private boolean isTherePath(Integer[][][] tempChannel,int pin_num,int startX,int startY,int endX,int endY,int z) {
 		Point[][][] graph = new Point[this.numOfRows][this.numOfPins][layers];
 		for (int layer = 0; layer < 2; layer++) {
